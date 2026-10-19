@@ -133,3 +133,69 @@ core is added. See `README.md` → Licensing.
   enumerated: the ids are owned by the core, and the Java call sites only pass them.
 - `nativeSetUsbFd`'s `long` return and `nativeSetXiaomiAuthGeneration`'s effect are
   typed from the Java declarations only.
+
+## 6. Result payload contract (established)
+
+Every native entry point answers with a string. Success is a payload starting with `OK\n` —
+the call sites test `startsWith("OK\n")` and show the rest to the user; anything else is
+presented as an error. The payload is a line-oriented block, **not JSON**: `x/zamkzqg.oohojlj
+(payload, label)` splits on `\r?\n` and returns the remainder of the first line whose text
+starts with the label, colon included.
+
+Labels the app reads from a device-info payload (all from one call site in `MainActivity`):
+
+| Label | Meaning |
+| --- | --- |
+| `CHIP:` | SoC |
+| `STORAGE:` | storage kind (eMMC/UFS) |
+| `BOOT MODE:` | connection / boot mode |
+| `DA PROTOCOL:` | XML or XFlash |
+| `HW CODE:`, `HW SUBCODE:` | hardware code and subcode |
+| `HW VERSION:`, `SW VERSION:` | versions — no source for these was located |
+| `TARGET CONFIG:` | target config word |
+| `MEID:` | MEID |
+| `SOC ID:` | SoC ID |
+| `SBC:`, `SLA:`, `DAA:` | security features enabled |
+
+Labels the app reads from a boot-control payload: `SLOT_COUNT:`, `ACTIVE_SLOT:`, `SUFFIX:`,
+`CRC:`, `OFFSET:`, and per slot `SLOT_A_PRIORITY:`, `SLOT_A_TRIES:`, `SLOT_A_SUCCESSFUL:`,
+`SLOT_A_BOOTABLE:`, `SLOT_A_VERITY:` plus the `SLOT_B_*` set.
+
+`bootctrl-set` receives operands shaped like `set_active:<slot>` (`format:` and `raw:`
+operands appear on the same path). Call sites pass two leading empty operands before the
+meaningful ones — `nativeRunGuiAction(i, j, "pgpt", "", "", a, b, c)` — so a core must not
+assume operand 0 is the primary argument.
+
+Not established: the label set for the partition-table verb (`pgpt`) and for `upload`, and the
+error-message vocabulary callers may match on.
+
+## 7. Command surface the core implements
+
+The operand layout is established: `nativeRunCommand(fd, timeout, verb, op0, op1, da, auth,
+preloader)`. `MainActivity.java:406-442` passes the two parsed operands as `str9`/`str10` and then
+`str2`/`str3`/`str4` — the `--da`, `--auth` and `--pl` paths — and `MainActivity.java:5364` hands
+all six to JNI in that order; the GUI call sites (`x/vntpaom.java:94,226`, `x/hhqpjvl.java:59,158`,
+`x/silhone.java:123`, `x/lpkdqgx.java:122`) use the same tail. `nativeConnectSession(mode, timeout,
+da, auth, preloader)` is the same shape without the verb and operands.
+
+| verb | core behaviour | status |
+| --- | --- | --- |
+| `probe` | build session, handshake only, return the device-info block | implemented |
+| `pgpt` | partition table block | implemented |
+| `bootctrl-info` | boot-control block | implemented |
+| `bootctrl-set` | read `misc`/`para`, patch the active slot, write the partition back | implemented |
+| `upload` | read partition → file | implemented |
+| `read-flash` | raw flash read → file | implemented |
+| `download` | write image into the partition; a `name\t<hex offset>` operand takes the offset path | implemented |
+| `scatter-download` | as `download` (offset form) | implemented |
+| `write-flash` | write image to a partition | implemented |
+| `erase-partition` | erase one partition | implemented |
+| `seccfg` | `unlock` / `lock`; reading the state back is refused | partial |
+| `scatter-download-v6` | read the scatter/XML file, flash it, resolving images beside the scatter | implemented, untested |
+| `reboot` | `normal`/`fastboot`/`recovery`; an empty operand means normal | implemented |
+| `shutdown` | power off | implemented |
+| `crash` | close the session | implemented |
+| `scatter-firmware-upgrade` | — | not implemented; the answer is an explicit error |
+
+Nothing above is verified against hardware: this device has no OTG target, so every USB/DA path is
+compile- and API-verified only.

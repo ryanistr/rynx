@@ -1,0 +1,10 @@
+[package]
+name = "usbfs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Android usbfs transport implementing the engine's MtkPort trait"
+
+[dependencies]
+libc.workspace = true
+penumbra-mtk.workspace = true

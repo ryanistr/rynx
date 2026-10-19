@@ -1,0 +1,17 @@
+[package]
+name = "rynx-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Session, command dispatch and USB transport for the Rynx flash tool"
+
+[lib]
+name = "rynx_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+jni.workspace = true
+libc.workspace = true
+log.workspace = true
+usbfs.workspace = true
+penumbra-mtk.workspace = true

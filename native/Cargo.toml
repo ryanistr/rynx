@@ -1,0 +1,29 @@
+[workspace]
+resolver = "3"
+members = ["usbfs", "core", "adbfastboot"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Native core for Rynx, an Android MediaTek service flash tool"
+
+[workspace.dependencies]
+jni = "0.21"
+libc = "0.2"
+log = "0.4"
+usbfs = { path = "usbfs" }
+
+# Pinned to the revision this port was written against (main, 2026-10-16).
+# The engine requires at least one port backend (its own compile_error! otherwise). The nusb and
+# rusb backends cannot build for Android — nusb gates list_devices() to linux/macos/windows/wasm32
+# — and this core does not use a backend of theirs anyway: android hands us a raw fd, which our
+# usbfs crate drives. `serial` is the one backend that stays compilable for aarch64-linux-android.
+penumbra-mtk = { git = "https://github.com/shomykohai/penumbra", rev = "2695707f8bd773115b6179b9d303bdfbf094fdb4", default-features = false, features = ["serial", "exploits", "localslakeyring"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
