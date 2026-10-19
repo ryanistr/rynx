@@ -1,7 +1,8 @@
 # Rynx
 
-Rynx is a free and open-source Android app for working with phones and other devices over USB:
-partition tools, ADB and Fastboot helpers, and flashing utilities, in a plain text-first interface.
+Rynx is a free and open-source **Android MediaTek service flash tool**: partition reads, backups and
+flashes, scatter firmware, BootROM/DA service flows, plus ADB and Fastboot helpers, in a plain
+text-first interface.
 
 Licensed under the Apache License 2.0 - see [LICENSE](LICENSE).
 

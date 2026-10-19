@@ -14,7 +14,7 @@
     <string name="about_license_dialog_title">Lisensi Apache 2.0</string>
     <string name="about_license_notice">Dilisensikan di bawah Apache License, Version 2.0. Ketentuan lengkap ada di https://www.apache.org/licenses/LICENSE-2.0</string>
     <string name="about_license_summary">Lisensi: Apache-2.0</string>
-    <string name="about_subtitle">Mediatek Service Tool</string>
+    <string name="about_subtitle">Alat Flash Service MediaTek Android</string>
     <string name="about_telegram_button">TELEGRAM</string>
     <string name="about_telegram_link">example.com/rynx</string>
     <string name="about_telegram_url">https://example.com/rynx</string>
@@ -151,7 +151,7 @@ Jalur lokal diresolusi dari direktori kerja terminal. Default: /sdcard"</string>
     <string name="android_tools_unlocked">Tidak terkunci</string>
     <string name="android_tools_usb_id">USB VID:PID</string>
     <string name="app_name">Rynx</string>
-    <string name="app_subtitle">MediaTek Service Tool</string>
+    <string name="app_subtitle">Alat Flash Service MediaTek Android</string>
     <string name="batch_backup_action_compact">BACKUP %1$d</string>
     <string name="batch_backup_clear">BERSIHKAN</string>
     <string name="batch_backup_complete">Backup batch selesai</string>

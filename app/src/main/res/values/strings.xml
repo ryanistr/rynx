@@ -14,7 +14,7 @@
     <string name="about_license_dialog_title">Apache License 2.0</string>
     <string name="about_license_notice">Licensed under the Apache License, Version 2.0. See https://www.apache.org/licenses/LICENSE-2.0 for the full terms.</string>
     <string name="about_license_summary">License: Apache-2.0</string>
-    <string name="about_subtitle">MediaTek Service Tool</string>
+    <string name="about_subtitle">Android MediaTek Service Flash Tool</string>
     <string name="about_telegram_button">TELEGRAM</string>
     <string name="about_telegram_link">example.com/rynx</string>
     <string name="about_telegram_url">https://example.com/rynx</string>
@@ -151,7 +151,7 @@ Local paths are resolved from the terminal working directory. Default: /sdcard"<
     <string name="android_tools_unlocked">Unlocked</string>
     <string name="android_tools_usb_id">USB VID:PID</string>
     <string name="app_name">Rynx</string>
-    <string name="app_subtitle">MediaTek Service Tool</string>
+    <string name="app_subtitle">Android MediaTek Service Flash Tool</string>
     <string name="batch_backup_action_compact">BACK UP %1$d</string>
     <string name="batch_backup_clear">CLEAR</string>
     <string name="batch_backup_complete">Batch backup complete</string>
