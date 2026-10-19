@@ -7,7 +7,7 @@ different build systems and have different completion states.
 | Layer | What it covers | State |
 | --- | --- | --- |
 | App layer (Java) | UI, screen flows, USB permission handling, ADB/Fastboot orchestration, update feed | present |
-| Native core (`arm64-v8a` `.so`) | BROM/Preloader handshake, DA upload and DA protocols, storage and partition operations, SLA signing, ADB/Fastboot protocol | `native/` (session, dispatch, usbfs; fastboot verbs still stubbed) |
+| Native core (`arm64-v8a` `.so`) | BROM/Preloader handshake, DA upload and DA protocols, storage and partition operations, SLA signing, ADB/Fastboot protocol | `native/` (transport, session, dispatch, fastboot conversation) |
 
 The app layer and the native core talk over a fixed JNI contract; that contract is
 recorded in section 2 and is the checklist for the core.
@@ -25,6 +25,11 @@ POWER, plus the bottom navigation bar.
 Three libraries make up the core. Every Java-visible entry point is registered from
 `JNI_OnLoad` with `RegisterNatives`, so the exported symbol table of each library
 contains only `JNI_OnLoad`; the names below are the registration strings.
+
+This repository builds two of them (`librynx_core.so`, `librynx_adbfastboot.so`). The third is the
+protected-container gate; the app was switched to loading plain libraries with
+`System.loadLibrary` instead, so that gate is not built here and the class that declares it is
+never reached.
 
 ### 2.1 `librynx_core.so` — registered against `com.rynx.app.MainActivity`
 
@@ -125,6 +130,9 @@ The core is a Rust workspace library plus a thin JNI bridge:
    (`EncryptedNativeLoader` + `NativeAssetGate`) is optional and only exists to keep
    an engine out of plain sight; a core built from source does not need it.
 
+Steps 1–4 are done and committed; `native/README.md` describes the resulting layout. For the
+desktop targets, see `docs/PLATFORMS.md`.
+
 Licensing note: the engine crates are AGPL-3.0-or-later. Linking them makes the
 combined work AGPL-3.0-or-later; the repository licence has to be settled before the
 core is added. See `README.md` → Licensing.
@@ -133,7 +141,13 @@ core is added. See `README.md` → Licensing.
 
 - No USB/DA/Flash flow has been exercised end to end — there is no MTK target on USB on this
   machine. The core builds and links for `aarch64-linux-android`, and its payload layer is
-  unit-tested, but no session has ever been opened against a device.
+  unit-tested, but no session has ever been opened against a device. The same applies to the
+  fastboot conversation in `librynx_adbfastboot.so`: its framing, sparse splitting and interface
+  walk are unit-tested against the wire format, and no target has ever answered it.
+- What *is* verified on hardware: the app installs, launches and keeps running with both libraries
+  mapped into its address space, and the screens that read the payload labels render.
+- Linux and Windows are not built at all — see `docs/PLATFORMS.md` for what each target needs and
+  which layers are already platform-independent.
 - The dispatch-id namespace of `nativeRunCommand` / `nativeRunGuiAction` is not enumerated: the
   ids are owned by the core, and the Java call sites only pass them. The reference engine ignores
   them too, so this core does the same.

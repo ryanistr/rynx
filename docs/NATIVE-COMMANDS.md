@@ -247,3 +247,34 @@ this tree as verbs (checked): `sgpt`, `efuse`, `efuse-read`, `seccfg-set`,
 `read-partition`, `write-partition`, `readback`. `sgpt`/`efuse` appear only as
 partition *names* in the risk classifier (`x/ohwxijw.java:95,98`) and the scatter
 status logic (`x/kggugdp.java:2255`).
+
+## Terminal gate vs engine dispatch
+
+The app's terminal gate is wider than the engine. `x/cugubfc.nmpwovh` lists 31 names
+(`x/cugubfc.java:10`), and `x/cugubfc.nmpwovh(String)` (`x/cugubfc.java:68`) collapses only
+the eight aliases — `up`/`read`/`r` → `upload`, `rf` → `read-flash`, `wf` → `write-flash`,
+`dl`/`write`/`w` → `download`, `gpt` → `pgpt`, `xflash` → `x-flash`. Everything else passes
+through with its spelling intact.
+
+The engine can execute far fewer of them. A byte-level scan of the reference core (1 448 696
+bytes, arm64) finds its dispatch literals in one pool at file offset `0x2302d`–`0x230ab`:
+
+```
+probe  reboot  bootctrl-info  bootctrl-set  upload  read-flash  erase-partition  erase
+scatter-firmware-upgrade  scatter-download-v6  scatter-download  write-flash
+```
+
+with `seccfg`, `crash` and `shutdown` compared from their own literals (`0x2311b`, `0x23186`,
+`0x19300`) and `download` as the 8-byte prefix of `scatter-download` (`0x23095`, inside the
+`scatter-download-v6` literal at `0x2308d`). The remaining
+gate names are **absent from the whole binary**: `rpmb`, `format`, `peek`, `poke`, `read-all`,
+`write-all`, `read-offset`, `write-offset`, `set-active-slot` and `x-flash` occur nowhere as
+standalone bytes (`rpmb`/`format` only inside longer words such as `Invalid RPMB key format`
+and `format-on-upgrade`; `xflash` only as the DA module path `…da::xflash::patch`), and no
+inline 4-byte compare for `pgpt`/`sgpt` exists either — `pgpt` appears once, as data at
+`0x22e94`, with `sgpt` beside it at `0x22e98`.
+
+So a terminal line naming one of those is rejected by the engine as an unsupported command,
+not silently handled. The core here matches the engine's executable set exactly and adds only
+`partitions`/`list-partitions`, which the app never sends.
+
