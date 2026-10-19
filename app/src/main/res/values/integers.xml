@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="bottom_nav_active_weight_x100">160</integer>
+    <integer name="bottom_nav_animation_ms">300</integer>
+    <integer name="bottom_nav_inactive_weight_x100">70</integer>
+    <integer name="bottom_nav_label_delay_ms">70</integer>
+    <integer name="bottom_nav_press_in_ms">90</integer>
+    <integer name="bottom_nav_press_out_ms">140</integer>
+    <integer name="ui_page_enter_ms">220</integer>
+    <integer name="ui_page_exit_ms">150</integer>
+    <integer name="ui_press_alpha_x1000">940</integer>
+    <integer name="ui_press_in_ms">85</integer>
+    <integer name="ui_press_out_ms">140</integer>
+    <integer name="ui_press_scale_x1000">970</integer>
+</resources>
