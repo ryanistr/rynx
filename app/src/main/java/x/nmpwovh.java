@@ -30,7 +30,7 @@ public final /* synthetic */ class nmpwovh implements View.OnClickListener {
                 ScrollView scrollView = new ScrollView(activity);
                 StringBuilder sb = new StringBuilder();
                 try {
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(activity.getResources().openRawResource(R.raw.apache_2_0)));
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(activity.getResources().openRawResource(R.raw.agpl_3_0)));
                     while (true) {
                         try {
                             String line = bufferedReader.readLine();

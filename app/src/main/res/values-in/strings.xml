@@ -3,7 +3,7 @@
     <string name="about_app_name">Rynx</string>
     <string name="about_close">Tutup</string>
     <string name="about_credit_android">Aplikasi Android: Rynx</string>
-    <string name="about_credit_core">Core MTK: belum disertakan di build ini</string>
+    <string name="about_credit_core">Core MTK: mesin native Rynx, AGPL-3.0-or-later</string>
     <string name="about_credit_ui_design">UI: tata letak placeholder sederhana</string>
     <string name="about_credits_title">KREDIT &amp; LISENSI</string>
     <string name="about_donate_button">DONASI</string>
@@ -11,9 +11,9 @@
     <string name="about_donate_link">example.com/rynx/donate</string>
     <string name="about_donate_url">https://example.com/rynx/donate</string>
     <string name="about_join_us_on">Temukan kami di</string>
-    <string name="about_license_dialog_title">Lisensi Apache 2.0</string>
-    <string name="about_license_notice">Dilisensikan di bawah Apache License, Version 2.0. Ketentuan lengkap ada di https://www.apache.org/licenses/LICENSE-2.0</string>
-    <string name="about_license_summary">Lisensi: Apache-2.0</string>
+    <string name="about_license_dialog_title">Lisensi GNU AGPL v3.0 atau lebih baru</string>
+    <string name="about_license_notice">Dilisensikan di bawah GNU Affero General Public License, versi 3 atau lebih baru. Ketentuan lengkap ada di https://www.gnu.org/licenses/agpl-3.0.html</string>
+    <string name="about_license_summary">Lisensi: AGPL-3.0-or-later</string>
     <string name="about_subtitle">Alat Flash Service MediaTek Android</string>
     <string name="about_telegram_button">TELEGRAM</string>
     <string name="about_telegram_link">example.com/rynx</string>

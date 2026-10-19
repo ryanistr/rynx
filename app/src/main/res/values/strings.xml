@@ -3,7 +3,7 @@
     <string name="about_app_name">Rynx</string>
     <string name="about_close">Close</string>
     <string name="about_credit_android">Android app: Rynx</string>
-    <string name="about_credit_core">MTK core: not included in this build</string>
+    <string name="about_credit_core">MTK core: Rynx native engine, AGPL-3.0-or-later</string>
     <string name="about_credit_ui_design">UI: plain placeholder layout</string>
     <string name="about_credits_title">CREDITS &amp; LICENSES</string>
     <string name="about_donate_button">DONATE</string>
@@ -11,9 +11,9 @@
     <string name="about_donate_link">example.com/rynx/donate</string>
     <string name="about_donate_url">https://example.com/rynx/donate</string>
     <string name="about_join_us_on">Find us on</string>
-    <string name="about_license_dialog_title">Apache License 2.0</string>
-    <string name="about_license_notice">Licensed under the Apache License, Version 2.0. See https://www.apache.org/licenses/LICENSE-2.0 for the full terms.</string>
-    <string name="about_license_summary">License: Apache-2.0</string>
+    <string name="about_license_dialog_title">GNU AGPL v3.0 or later</string>
+    <string name="about_license_notice">Licensed under the GNU Affero General Public License, version 3 or later. See https://www.gnu.org/licenses/agpl-3.0.html for the full terms.</string>
+    <string name="about_license_summary">License: AGPL-3.0-or-later</string>
     <string name="about_subtitle">Android MediaTek Service Flash Tool</string>
     <string name="about_telegram_button">TELEGRAM</string>
     <string name="about_telegram_link">example.com/rynx</string>

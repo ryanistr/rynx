@@ -5,7 +5,8 @@ members = ["usbfs", "core", "adbfastboot"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-license = "Apache-2.0"
+# AGPL-3.0-or-later: the core links AGPL engine crates, so the shipped libraries are one combined work.
+license = "AGPL-3.0-or-later"
 description = "Native core for Rynx, an Android MediaTek service flash tool"
 
 [workspace.dependencies]
