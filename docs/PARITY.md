@@ -269,15 +269,31 @@ R8-minified). Rynx side: `build-apk/rynx-debug.apk`, md5 `294b0623c90a42e3ac6055
 | --- | --- | --- | --- |
 | string keys | 1092 en / 1092 in | 1092 / 1092 | identical key sets, both locales |
 | string values | — | — | 114 differ: product names, the `/sdcard/rynx` backup path, credit lines, and `&`-escaping artifacts. No functional text differs |
-| manifest | `INTERNET`, `MANAGE_EXTERNAL_STORAGE`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`; `android.hardware.usb.host` required; one launcher activity; no service, receiver or provider | same | identical |
+| manifest | `INTERNET`, `MANAGE_EXTERNAL_STORAGE`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`; `android.hardware.usb.host` required; one launcher activity; no service, receiver or provider | same | identical, except that `icon`/`roundIcon` are absent by design — no image assets ship yet, and the APK installs and launches with the platform default (cold start `TotalTime: 3713`, §5) |
+| resources (by name) | 1343 | 1340 | same type counts on both sides — see the table breakdown below; only brand renames and three removed image assets differ |
 | defined classes | 229 | 503 | 156 identical names, 69 renamed with an identical `(name, argc, return)` method profile, 4 method-less classes present by name; **0 missing** |
 | defined methods | 1105 | 1813 | superset |
 | defined fields | 1142 | 3700 | superset |
 
 The 343 rynx-only class names are all nested (`$…`), `R`/`R$` or `BuildConfig` entries; the audit
 found no unexplained top-level class. The 69 ref-only names each have a class in rynx carrying the
-same method multiset, which is expected after the R8 → decompile → javac round trip reshapes
+same method multisets, which is expected after the R8 → decompile → javac round trip reshapes
 anonymous classes.
+
+Package inventory: outside `res/` the reference ships `AndroidManifest.xml`, `classes.dex`,
+`resources.arsc`, `lib/arm64-v8a/libraffprjkt_guard.so` and `assets/rfx/a.rfx` + `assets/rfx/b.rfx`
+— its two encrypted native payloads, the container rynx deliberately does not reproduce; rynx
+ships the two plain `librynx_*.so` instead. Neither APK carries a Download Agent, scatter file or
+certificate, so no runtime payload is missing.
+
+Resource table, compared by name through `aapt2 dump resources` (R8 shuffles `res/` file paths, so
+paths are not comparable): 1343 entries in the reference against 1340 in rynx, with 1092 strings,
+146 dimens, 49 colours, 12 integers, 2 styles, 1 xml and 1 raw on both sides. Every name difference
+is either the `raff_*` → `rynx_*` colour rename, `Theme.Raffprjkt.*` → `Theme.Rynx.*`, or one of the
+three deliberately removed image assets (`rafi_creator_animation` and the two launcher mipmaps). The
+single `raw` entry is the GNU AGPL v3 text on both sides: the reference asset, rynx's
+`res/raw/agpl_3_0.txt` and the repository `LICENSE` are byte-identical, md5
+`4ae09d45eac4aa08d013b5f2e01c67f6`.
 
 Two defects the audit caught, both fixed in the same commit:
 
