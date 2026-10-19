@@ -62,6 +62,7 @@ public abstract class zamkzqg {
     }
 
     public static JSONObject araemok(String str, String str2, JSONObject jSONObject, int i, int i2) throws Throwable {
+        Throwable thAlias = null;
         try {
             URL url = new URL(str.trim());
             HttpURLConnection httpURLConnection = null;
@@ -122,15 +123,15 @@ public abstract class zamkzqg {
                         throw th;
                     }
                 } catch (Throwable th3) {
-                    th = th3;
+                    thAlias = th3;
                     httpURLConnection = httpURLConnection2;
                     if (httpURLConnection != null) {
                         httpURLConnection.disconnect();
                     }
-                    throw th;
+                    throw thAlias;
                 }
             } catch (Throwable th4) {
-                th = th4;
+                thAlias = th4;
             }
         } catch (IOException e2) {
             throw new czgynww("INVALID_ENDPOINT", 0, "Authorization server URL is invalid.", e2);
@@ -1890,8 +1891,8 @@ public abstract class zamkzqg {
             linearLayout4.setBackground(jvtqflj(activity, iTmdubwv, cugubfc(activity, str2), activity.getResources().getDimensionPixelSize(R.dimen.batch_compact_row_radius)));
             LinearLayout linearLayoutLvtqoqa4 = lvtqoqa(activity);
             linearLayoutLvtqoqa4.setGravity(16);
-            linearLayoutLvtqoqa4.addView(oxoagud(activity, yxcmoypVar2.nmpwovh, 14, zngzleo(activity), r3), new LinearLayout.LayoutParams(i2, i3, 1.0f));
-            TextView textViewOxoagud4 = oxoagud(activity, activity.getString("red".equals(str2) ? R.string.parts_risk_red : "yellow".equals(str2) ? R.string.parts_risk_yellow : R.string.parts_risk_green), 9, cugubfc(activity, str2), r3);
+            linearLayoutLvtqoqa4.addView(oxoagud(activity, yxcmoypVar2.nmpwovh, 14, zngzleo(activity), r3 != 0), new LinearLayout.LayoutParams(i2, i3, 1.0f));
+            TextView textViewOxoagud4 = oxoagud(activity, activity.getString("red".equals(str2) ? R.string.parts_risk_red : "yellow".equals(str2) ? R.string.parts_risk_yellow : R.string.parts_risk_green), 9, cugubfc(activity, str2), r3 != 0);
             textViewOxoagud4.setPadding(activity.getResources().getDimensionPixelSize(R.dimen.batch_compact_badge_padding_horizontal), activity.getResources().getDimensionPixelSize(R.dimen.batch_compact_badge_padding_vertical), activity.getResources().getDimensionPixelSize(R.dimen.batch_compact_badge_padding_horizontal), activity.getResources().getDimensionPixelSize(R.dimen.batch_compact_badge_padding_vertical));
             textViewOxoagud4.setBackground(jvtqflj(activity, tmdubwv(activity, str2), activity.getColor(R.color.rynx_transparent), activity.getResources().getDimensionPixelSize(R.dimen.batch_compact_badge_radius)));
             linearLayoutLvtqoqa4.addView(textViewOxoagud4);
@@ -1899,7 +1900,7 @@ public abstract class zamkzqg {
             TextView textViewOxoagud5 = oxoagud(activity, yxcmoypVar2.ojyssqt, 11, nmpwovh(activity), true);
             textViewOxoagud5.setPadding(0, activity.getResources().getDimensionPixelSize(R.dimen.partition_compact_note_top), 0, activity.getResources().getDimensionPixelSize(R.dimen.ui_card_margin_top));
             linearLayout4.addView(textViewOxoagud5);
-            for (tnejqcj tnejqcjVar2 : yxcmoypVar2.lthborb) {
+            for (tnejqcj tnejqcjVar2 : (ArrayList<tnejqcj>) yxcmoypVar2.lthborb) {
                 LinearLayout linearLayoutLvtqoqa5 = lvtqoqa(activity);
                 linearLayoutLvtqoqa5.setGravity(16);
                 linearLayoutLvtqoqa5.setPadding(0, activity.getResources().getDimensionPixelSize(R.dimen.batch_review_destination_padding_vertical), 0, activity.getResources().getDimensionPixelSize(R.dimen.batch_review_destination_padding_vertical));

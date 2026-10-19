@@ -30,12 +30,13 @@ public final /* synthetic */ class hhqpjvl implements Runnable {
 
     @Override // java.lang.Runnable
     public final void run() {
-        String strNativeRunGuiAction;
+        String strNativeRunGuiAction = null;
         suqlntg suqlntgVar;
         String str;
         String str2;
         ohwxijw ohwxijwVar;
-        suqlntg suqlntgVar2;
+        suqlntg suqlntgVar2 = null;
+        Throwable thAlias = null;
         int i = 1;
         switch (this.nmpwovh) {
             case 0:
@@ -62,7 +63,7 @@ public final /* synthetic */ class hhqpjvl implements Runnable {
                             strNativeRunGuiAction = "ERROR\n" + mainActivity.getString(R.string.error_gui_jni, String.valueOf(th));
                         }
                     } catch (Throwable th2) {
-                        th = th2;
+                        thAlias = th2;
                     }
                 }
                 int i3 = 0;
@@ -82,6 +83,7 @@ public final /* synthetic */ class hhqpjvl implements Runnable {
                     if (i4 >= arrayList.size()) {
                         suqlntgVar = null;
                         str = null;
+                        break;
                     } else if (kggugdpVar.qwgjehf && kggugdpVar.nsyqsfj) {
                         araemok araemokVar = (araemok) arrayList.get(i4);
                         kggugdpVar.runOnUiThread(new rrpfqyy(kggugdpVar, i4, arrayList, araemokVar, 3));
@@ -100,11 +102,13 @@ public final /* synthetic */ class hhqpjvl implements Runnable {
                         } else {
                             str = araemokVar.nmpwovh.nmpwovh;
                             suqlntgVar = suqlntgVarYhrqvll;
+                            break;
                         }
                     } else {
                         int i8 = i4;
                         suqlntgVar = new suqlntg(2, kggugdpVar.getString(R.string.error_da_not_ready));
                         str = ((araemok) arrayList.get(i8)).nmpwovh.nmpwovh;
+                        break;
                     }
                 }
                 kggugdpVar.lpkdqgx = false;
@@ -167,15 +171,15 @@ public final /* synthetic */ class hhqpjvl implements Runnable {
                             }
                             suqlntgVar2 = new suqlntg(i11, strNativeRunGuiAction2);
                         } catch (Throwable th3) {
-                            th = th3;
+                            thAlias = th3;
                             kggugdpVar2.nsyqsfj = kggugdpVar2.qwgjehf && kggugdpVar2.nativeHasSession();
                             if (!kggugdpVar2.nsyqsfj) {
                                 kggugdpVar2.xvxmcgn = str2;
                             }
-                            suqlntgVar2 = new suqlntg(1, kggugdpVar2.getString(R.string.error_gui_jni, String.valueOf(th)));
+                            suqlntgVar2 = new suqlntg(1, kggugdpVar2.getString(R.string.error_gui_jni, String.valueOf(thAlias)));
                         }
                     } catch (Throwable th4) {
-                        th = th4;
+                        thAlias = th4;
                         str2 = "—";
                         ohwxijwVar = ohwxijwVar2;
                     }

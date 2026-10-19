@@ -356,7 +356,7 @@ public abstract class pwjmwpv {
     }
 
     public static Element nkemejx(Element element, String str) {
-        for (Element element2 : oqexvyb(element, "general")) {
+        for (Element element2 : (ArrayList<Element>) oqexvyb(element, "general")) {
             if (str.equalsIgnoreCase(lthborb(element2.getAttribute("name")))) {
                 return element2;
             }
@@ -413,6 +413,7 @@ public abstract class pwjmwpv {
     /* JADX WARN: Instruction removed from duplicated block: B:102:0x0228, please report this as an issue */
     public static lcgzsis pvbzgon(File file, String str, boolean z) throws IOException {
         Element element;
+        Exception eAlias = null;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) Math.min(file.length(), 4194304L));
         FileInputStream fileInputStream = new FileInputStream(file);
         try {
@@ -533,7 +534,7 @@ public abstract class pwjmwpv {
                                     Element element2 = (Element) arrayListOqexvyb2.get(i2);
                                     i2++;
                                     ezuzoct ezuzoctVar = new ezuzoct(i2, lthborb(element2.getAttribute("name")));
-                                    for (Element element3 : oqexvyb(element2, null)) {
+                                    for (Element element3 : (ArrayList<Element>) oqexvyb(element2, null)) {
                                         ezuzoctVar.ojyssqt(i2, element3.getTagName().toLowerCase(Locale.ROOT), lthborb(element3.getTextContent()));
                                     }
                                     arrayList.add(ezuzoctVar.nmpwovh(i2));
@@ -545,8 +546,8 @@ public abstract class pwjmwpv {
                                 throw new IOException("Invalid or unsafe scatter XML", e);
                             }
                         } catch (ParserConfigurationException e2) {
-                            e = e2;
-                            throw new IOException("Invalid or unsafe scatter XML", e);
+                            eAlias = e2;
+                            throw new IOException("Invalid or unsafe scatter XML", eAlias);
                         }
                     } catch (CharacterCodingException e3) {
                         throw new IOException("Scatter XML must use valid UTF-8 encoding", e3);

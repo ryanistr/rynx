@@ -31,9 +31,9 @@ public final /* synthetic */ class zftrkmx implements Runnable {
     }
 
     @Override // java.lang.Runnable
-    public final void run() throws czgynww {
+    public final void run() {
         String message;
-        final hiofinr hiofinrVarYxcmoyp;
+        hiofinr hiofinrVarYxcmoypTmp;
         switch (this.nmpwovh) {
             case 0:
                 com.rynx.app.nmpwovh nmpwovhVar = this.ojyssqt;
@@ -63,15 +63,16 @@ public final /* synthetic */ class zftrkmx implements Runnable {
                 final com.rynx.app.nmpwovh nmpwovhVar2 = this.ojyssqt;
                 nmpwovhVar2.getClass();
                 try {
-                    hiofinrVarYxcmoyp = zamkzqg.yxcmoyp(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar2, str4, str5, str6, i3);
+                    hiofinrVarYxcmoypTmp = zamkzqg.yxcmoyp(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar2, str4, str5, str6, i3);
                     message = null;
                 } catch (Throwable th) {
                     message = th.getMessage();
                     if (message == null || message.trim().isEmpty()) {
                         message = nmpwovhVar2.getString(R.string.xiaomi_authorize_unknown_error);
                     }
-                    hiofinrVarYxcmoyp = null;
+                    hiofinrVarYxcmoypTmp = null;
                 }
+                final hiofinr hiofinrVarYxcmoyp = hiofinrVarYxcmoypTmp;
                 final zwccvwt zwccvwtVar2 = this.dytyqos;
                 final boolean z2 = this.wqrnifx;
                 final int i4 = this.imuemzb;

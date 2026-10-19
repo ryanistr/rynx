@@ -39,7 +39,6 @@ public final /* synthetic */ class eigllth implements Runnable {
                 synchronized (ccuulntVar) {
                     ccuulntVar.oqexvyb = false;
                     string = ccuulntVar.nmpwovh.toString();
-                    break;
                 }
                 kxotgjb kxotgjbVar = ccuulntVar.vivhedu;
                 if (kxotgjbVar != null) {

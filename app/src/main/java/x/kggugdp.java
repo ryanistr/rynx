@@ -1564,12 +1564,12 @@ public abstract class kggugdp extends com.rynx.app.nmpwovh {
     /* JADX WARN: Code duplicated, block: B:54:0x010c  */
     /* JADX WARN: Code duplicated, block: B:56:0x0112  */
     public final void hknanqb() {
-        String string;
-        String string2;
+        String string = null;
+        String string2 = null;
         String str;
-        boolean z;
+        boolean z = false;
         String str2;
-        String string3;
+        String string3 = null;
         String name;
         ArrayList arrayList = this.pcbbvuj;
         if (arrayList.isEmpty()) {
@@ -2172,15 +2172,15 @@ public abstract class kggugdp extends com.rynx.app.nmpwovh {
     /* JADX WARN: Code duplicated, block: B:72:0x0139  */
     public final void ljwltks() {
         ohwxijw ohwxijwVar;
-        String string;
-        String string2;
-        boolean z;
-        boolean z2;
+        String string = null;
+        String string2 = null;
+        boolean z = false;
+        boolean z2 = false;
         ohwxijw ohwxijwVar2;
-        String string3;
-        boolean z3;
-        boolean z4;
-        String string4;
+        String string3 = null;
+        boolean z3 = false;
+        boolean z4 = false;
+        String string4 = null;
         this.pwnmyid.clear();
         String string5 = "";
         if (this.wdznaie == null) {

@@ -57,12 +57,7 @@ public final /* synthetic */ class ezxxysz implements Runnable {
         nmpwovhVar.vopsyhw = null;
         int i3 = Build.VERSION.SDK_INT;
         if (i3 >= 33) {
-            nmpwovhVar.fadblxi = new OnBackInvokedCallback() { // from class: x.gefzxcg
-                @Override // android.window.OnBackInvokedCallback
-                public final void onBackInvoked() {
-                    nmpwovhVar.buswjhz();
-                }
-            };
+            nmpwovhVar.fadblxi = new gefzxcg(nmpwovhVar);
             nmpwovhVar.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, nmpwovhVar.fadblxi);
         }
         nmpwovhVar.dplrlfq = (UsbManager) nmpwovhVar.getSystemService("usb");

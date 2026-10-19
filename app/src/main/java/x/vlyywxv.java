@@ -219,15 +219,15 @@ public final class vlyywxv {
         textViewOxoagud19.setGravity(16);
         textViewOxoagud19.setPadding(zamkzqg.qunltjs(nmpwovhVar, 2), zamkzqg.qunltjs(nmpwovhVar, 11), zamkzqg.qunltjs(nmpwovhVar, 2), zamkzqg.qunltjs(nmpwovhVar, 7));
         final int i4 = 0;
-        textViewOxoagud19.setOnClickListener(new View.OnClickListener(this) { // from class: x.iqvvlnh
+        textViewOxoagud19.setOnClickListener(new View.OnClickListener() { // from class: x.iqvvlnh
             public final /* synthetic */ vlyywxv ojyssqt;
 
             {
-                this.ojyssqt = this;
+                this.ojyssqt = vlyywxv.this;
             }
 
             @Override // android.view.View.OnClickListener
-            public final void onClick(View view2) throws czgynww {
+            public final void onClick(View view2) {
                 switch (i4) {
                     case 0:
                         vlyywxv vlyywxvVar = this.ojyssqt;
@@ -285,11 +285,11 @@ public final class vlyywxv {
         TextView textViewNmpwovh3 = nmpwovh(R.string.xiaomi_auth_progress_close, true);
         this.czidoiw = textViewNmpwovh3;
         final int i5 = 0;
-        textViewNmpwovh.setOnClickListener(new View.OnClickListener(this) { // from class: x.qdiugcp
+        textViewNmpwovh.setOnClickListener(new View.OnClickListener() { // from class: x.qdiugcp
             public final /* synthetic */ vlyywxv ojyssqt;
 
             {
-                this.ojyssqt = this;
+                this.ojyssqt = vlyywxv.this;
             }
 
             @Override // android.view.View.OnClickListener
@@ -329,11 +329,11 @@ public final class vlyywxv {
             }
         });
         final int i6 = 1;
-        textViewNmpwovh2.setOnClickListener(new View.OnClickListener(this) { // from class: x.qdiugcp
+        textViewNmpwovh2.setOnClickListener(new View.OnClickListener() { // from class: x.qdiugcp
             public final /* synthetic */ vlyywxv ojyssqt;
 
             {
-                this.ojyssqt = this;
+                this.ojyssqt = vlyywxv.this;
             }
 
             @Override // android.view.View.OnClickListener
@@ -372,15 +372,15 @@ public final class vlyywxv {
                 }
             }
         });
-        textViewNmpwovh3.setOnClickListener(new View.OnClickListener(this) { // from class: x.iqvvlnh
+        textViewNmpwovh3.setOnClickListener(new View.OnClickListener() { // from class: x.iqvvlnh
             public final /* synthetic */ vlyywxv ojyssqt;
 
             {
-                this.ojyssqt = this;
+                this.ojyssqt = vlyywxv.this;
             }
 
             @Override // android.view.View.OnClickListener
-            public final void onClick(View view2) throws czgynww {
+            public final void onClick(View view2) {
                 switch (i6) {
                     case 0:
                         vlyywxv vlyywxvVar = this.ojyssqt;
@@ -533,7 +533,6 @@ public final class vlyywxv {
                                 str2 = Character.toUpperCase(strReplace.charAt(0)) + strReplace.substring(1);
                                 break;
                             }
-                            break;
                     }
                     str3 = str2;
                 }
@@ -559,7 +558,7 @@ public final class vlyywxv {
                 if (!str4.equals("failed")) {
                     r16 = -1;
                 } else {
-                    r16 = z;
+                    r16 = 1;
                 }
                 break;
             case -948696717:
@@ -676,7 +675,7 @@ public final class vlyywxv {
 
     public final void dytyqos() {
         StringBuilder sb = new StringBuilder();
-        for (String str : this.lthborb) {
+        for (String str : (ArrayDeque<String>) this.lthborb) {
             if (sb.length() != 0) {
                 sb.append('\n');
             }
@@ -829,10 +828,10 @@ public final class vlyywxv {
         String str;
         String str2;
         String str3;
-        int i;
+        int i = 0;
         int iCzidoiw;
         String str4;
-        int iPzqxblc2;
+        int iPzqxblc2 = 0;
         int iJbmzxye;
         Typeface typeface;
         View[] viewArr;
@@ -1085,7 +1084,7 @@ public final class vlyywxv {
             this.bgmsltp.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() { // from class: x.nysvajy
                 @Override // android.animation.ValueAnimator.AnimatorUpdateListener
                 public final void onAnimationUpdate(ValueAnimator valueAnimator3) {
-                    this.nmpwovh.imuemzb.setAlpha(((Float) valueAnimator3.getAnimatedValue()).floatValue());
+                    vlyywxv.this.imuemzb.setAlpha(((Float) valueAnimator3.getAnimatedValue()).floatValue());
                 }
             });
             this.bgmsltp.start();

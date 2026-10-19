@@ -181,23 +181,25 @@ public abstract class nmpwovh extends ojyssqt {
         this.czgynww = this.zfmpmio.submit(new Runnable() { // from class: x.ltnesel
             @Override // java.lang.Runnable
             public final void run() {
-                final List listLthborb;
-                final String str;
+                List listLthborbTmp = null;
+                String strTmp = null;
                 final com.rynx.app.nmpwovh nmpwovhVar = nmpwovh.this;
                 final int i2 = i;
                 final boolean z2 = z;
                 nmpwovhVar.getClass();
                 try {
-                    str = null;
-                    listLthborb = x.zsbaukl.lthborb(com.rynx.app.ojyssqt.jxvdcpb(), nmpwovhVar.iqvvlnh);
+
+                    listLthborbTmp = x.zsbaukl.lthborb(com.rynx.app.ojyssqt.jxvdcpb(), nmpwovhVar.iqvvlnh);
                 } catch (Throwable th) {
                     String message = th.getMessage();
                     if (message == null || message.trim().isEmpty()) {
                         message = nmpwovhVar.getString(R.string.xiaomi_authorize_unknown_error);
                     }
-                    listLthborb = null;
-                    str = message;
+
+                    strTmp = message;
                 }
+                final List listLthborb = listLthborbTmp;
+                final String str = strTmp;
                 nmpwovhVar.runOnUiThread(new Runnable() { // from class: x.dvzxbaj
                     @Override // java.lang.Runnable
                     public final void run() {
@@ -393,8 +395,8 @@ public abstract class nmpwovh extends ojyssqt {
     /* JADX WARN: Type inference failed for: r9v29, types: [android.view.View, android.view.ViewGroup, x.lataqgm] */
     public final View jlgwuft() {
         String str;
-        String string;
-        String string2;
+        String string = null;
+        String string2 = null;
         lataqgm lataqgmVar;
         String strEzxxysz;
         String[] strArr;
@@ -403,13 +405,13 @@ public abstract class nmpwovh extends ojyssqt {
         ScrollView r4;
         LinearLayout r2;
         final gepzcpd gepzcpdVar;
-        lataqgm lataqgmVar2;
-        int iNhhacgu;
-        int[] iArr;
-        int[] iArr2;
-        String[] strArr2;
-        int i2;
-        int i3;
+        lataqgm lataqgmVar2 = null;
+        int iNhhacgu = 0;
+        int[] iArr = null;
+        int[] iArr2 = null;
+        String[] strArr2 = null;
+        int i2 = 0;
+        int i3 = 0;
         lataqgm lataqgmVar3;
         int iNsizane;
         int[] iArr3;
@@ -417,9 +419,9 @@ public abstract class nmpwovh extends ojyssqt {
         String[] strArr3;
         int i4;
         int i5;
-        final int i6;
+        int i6;
         boolean z;
-        final int i7;
+        int i7;
         boolean z2;
         String str2;
         int i8;
@@ -429,7 +431,7 @@ public abstract class nmpwovh extends ojyssqt {
         String str3;
         int identifier;
         LinearLayout r31;
-        LinearLayout r32;
+        LinearLayout r32 = null;
         String str4 = "";
         try {
             str = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
@@ -448,15 +450,16 @@ public abstract class nmpwovh extends ojyssqt {
                 }
                 int i9 = i2;
                 final int i10 = 0;
+                final int i7site1 = i7;
                 lataqgmVar2.addView(x.zamkzqg.gzokllk(this, string3, str5, iNmpwovh, z2, new View.OnClickListener() { // from class: x.tqcgjht
                     @Override // android.view.View.OnClickListener
                     public final void onClick(View view) {
                         switch (i10) {
                             case 0:
-                                com.rynx.app.nmpwovh nmpwovhVar = gepzcpdVar.nmpwovh;
+                                com.rynx.app.nmpwovh nmpwovhVar = nmpwovh.this;
                                 nmpwovhVar.getClass();
                                 int iNhhacgu2 = x.zamkzqg.nhhacgu(nmpwovhVar);
-                                int i11 = i7;
+                                int i11 = i7site1;
                                 if (iNhhacgu2 != i11) {
                                     if (i11 != 10 && i11 != 16 && i11 != 28) {
                                         i11 = 22;
@@ -467,10 +470,10 @@ public abstract class nmpwovh extends ojyssqt {
                                 }
                                 break;
                             default:
-                                com.rynx.app.nmpwovh nmpwovhVar2 = gepzcpdVar.nmpwovh;
+                                com.rynx.app.nmpwovh nmpwovhVar2 = nmpwovh.this;
                                 nmpwovhVar2.getClass();
                                 int iNsizane2 = x.zamkzqg.nsizane(nmpwovhVar2);
-                                int i12 = i7;
+                                int i12 = i7site1;
                                 if (iNsizane2 != i12) {
                                     if (i12 < 0 || i12 > 3) {
                                         i12 = 3;
@@ -655,7 +658,7 @@ public abstract class nmpwovh extends ojyssqt {
             while (true) {
                 if (i2 < 4) {
                     break;
-                    break;
+
                 }
                 i7 = iArr[i2];
                 String string6 = getString(iArr2[i2]);
@@ -668,6 +671,7 @@ public abstract class nmpwovh extends ojyssqt {
                 }
                 int i14 = i2;
                 final int i15 = 0;
+                final int i7site2 = i7;
                 lataqgmVar2.addView(x.zamkzqg.gzokllk(this, string6, str10, iNmpwovh2, z2, new View.OnClickListener() { // from class: x.tqcgjht
                     @Override // android.view.View.OnClickListener
                     public final void onClick(View view2) {
@@ -676,7 +680,7 @@ public abstract class nmpwovh extends ojyssqt {
                                 com.rynx.app.nmpwovh nmpwovhVar = gepzcpdVar.nmpwovh;
                                 nmpwovhVar.getClass();
                                 int iNhhacgu2 = x.zamkzqg.nhhacgu(nmpwovhVar);
-                                int i16 = i7;
+                                int i16 = i7site2;
                                 if (iNhhacgu2 != i16) {
                                     if (i16 != 10 && i16 != 16 && i16 != 28) {
                                         i16 = 22;
@@ -690,7 +694,7 @@ public abstract class nmpwovh extends ojyssqt {
                                 com.rynx.app.nmpwovh nmpwovhVar2 = gepzcpdVar.nmpwovh;
                                 nmpwovhVar2.getClass();
                                 int iNsizane3 = x.zamkzqg.nsizane(nmpwovhVar2);
-                                int i17 = i7;
+                                int i17 = i7site2;
                                 if (iNsizane3 != i17) {
                                     if (i17 < 0 || i17 > 3) {
                                         i17 = 3;
@@ -729,6 +733,7 @@ public abstract class nmpwovh extends ojyssqt {
                 }
                 int i17 = iNsizane;
                 final int i18 = 1;
+                final int i6site3 = i6;
                 lataqgmVar3.addView(x.zamkzqg.gzokllk(this, string7, str11, iNmpwovh3, z, new View.OnClickListener() { // from class: x.tqcgjht
                     @Override // android.view.View.OnClickListener
                     public final void onClick(View view2) {
@@ -737,7 +742,7 @@ public abstract class nmpwovh extends ojyssqt {
                                 com.rynx.app.nmpwovh nmpwovhVar = gepzcpdVar.nmpwovh;
                                 nmpwovhVar.getClass();
                                 int iNhhacgu2 = x.zamkzqg.nhhacgu(nmpwovhVar);
-                                int i19 = i6;
+                                int i19 = i6site3;
                                 if (iNhhacgu2 != i19) {
                                     if (i19 != 10 && i19 != 16 && i19 != 28) {
                                         i19 = 22;
@@ -751,7 +756,7 @@ public abstract class nmpwovh extends ojyssqt {
                                 com.rynx.app.nmpwovh nmpwovhVar2 = gepzcpdVar.nmpwovh;
                                 nmpwovhVar2.getClass();
                                 int iNsizane3 = x.zamkzqg.nsizane(nmpwovhVar2);
-                                int i110 = i6;
+                                int i110 = i6site3;
                                 if (iNsizane3 != i110) {
                                     if (i110 < 0 || i110 > 3) {
                                         i110 = 3;
@@ -1656,6 +1661,7 @@ public abstract class nmpwovh extends ojyssqt {
             }
             int i114 = iNsizane;
             final int i115 = 1;
+            final int i6site4 = i6;
             lataqgmVar3.addView(x.zamkzqg.gzokllk(this, string8, str16, iNmpwovh7, z, new View.OnClickListener() { // from class: x.tqcgjht
                 @Override // android.view.View.OnClickListener
                 public final void onClick(View view2) {
@@ -1664,7 +1670,7 @@ public abstract class nmpwovh extends ojyssqt {
                             com.rynx.app.nmpwovh nmpwovhVar = gepzcpdVar.nmpwovh;
                             nmpwovhVar.getClass();
                             int iNhhacgu2 = x.zamkzqg.nhhacgu(nmpwovhVar);
-                            int i116 = i6;
+                            int i116 = i6site4;
                             if (iNhhacgu2 != i116) {
                                 if (i116 != 10 && i116 != 16 && i116 != 28) {
                                     i116 = 22;
@@ -1678,7 +1684,7 @@ public abstract class nmpwovh extends ojyssqt {
                             com.rynx.app.nmpwovh nmpwovhVar2 = gepzcpdVar.nmpwovh;
                             nmpwovhVar2.getClass();
                             int iNsizane3 = x.zamkzqg.nsizane(nmpwovhVar2);
-                            int i117 = i6;
+                            int i117 = i6site4;
                             if (iNsizane3 != i117) {
                                 if (i117 < 0 || i117 > 3) {
                                     i117 = 3;

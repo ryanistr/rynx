@@ -26,13 +26,13 @@ public final /* synthetic */ class czidoiw implements Runnable {
     @Override // java.lang.Runnable
     public final void run() {
         String string;
-        String string2;
-        final String message;
-        final boolean z;
+        String string2 = null;
+        String messageTmp = null;
+        boolean zTmp = false;
         String string3;
-        final String string4;
-        final String strNmpwovh;
-        final boolean z2;
+        String string4Tmp = null;
+        String strNmpwovhTmp = null;
+        boolean z2Tmp = false;
         switch (this.nmpwovh) {
             case 0:
                 UsbDevice usbDevice = this.vivhedu;
@@ -59,14 +59,16 @@ public final /* synthetic */ class czidoiw implements Runnable {
                 try {
                     ulafhci.utmeivs(mainActivity2.getApplicationContext(), usbDevice2, usbDeviceConnection2, str2, new pvkaerr(mainActivity2, j, 2));
                     string2 = null;
-                } catch (nkemejx e) {
-                    message = e.getMessage();
-                    z = true;
+                } catch (RuntimeException e) {
+                    messageTmp = e.getMessage();
+                    zTmp = true;
                 } catch (Throwable th2) {
                     string2 = th2.toString();
                 }
-                message = string2;
-                z = false;
+                messageTmp = string2;
+                zTmp = false;
+                final String message = messageTmp;
+                final boolean z = zTmp;
                 mainActivity2.runOnUiThread(new Runnable() { // from class: x.sthdtww
                     @Override // java.lang.Runnable
                     public final void run() {
@@ -115,17 +117,20 @@ public final /* synthetic */ class czidoiw implements Runnable {
                 final MainActivity mainActivity4 = this.ojyssqt;
                 mainActivity4.getClass();
                 try {
-                    strNmpwovh = mwnganiVar.nmpwovh(usbDevice4, usbDeviceConnection4);
-                    string4 = null;
-                } catch (nkemejx e2) {
-                    string4 = e2.getMessage();
-                    z2 = true;
-                    strNmpwovh = null;
+                    strNmpwovhTmp = mwnganiVar.nmpwovh(usbDevice4, usbDeviceConnection4);
+                    string4Tmp = null;
+                } catch (RuntimeException e2) {
+                    string4Tmp = e2.getMessage();
+                    z2Tmp = true;
+                    strNmpwovhTmp = null;
                 } catch (Throwable th4) {
-                    string4 = th4.toString();
-                    strNmpwovh = null;
+                    string4Tmp = th4.toString();
+                    strNmpwovhTmp = null;
                 }
-                z2 = false;
+                z2Tmp = false;
+                final String strNmpwovh = strNmpwovhTmp;
+                final String string4 = string4Tmp;
+                final boolean z2 = z2Tmp;
                 final long j3 = this.oqexvyb;
                 mainActivity4.runOnUiThread(new Runnable() { // from class: x.wygqgxb
                     @Override // java.lang.Runnable

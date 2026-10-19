@@ -44,19 +44,20 @@ public final /* synthetic */ class ekyqleu implements Runnable {
         String string;
         boolean z;
         String strNkemejx;
-        mslkofp mslkofpVar;
-        final Throwable th;
-        final boolean z2;
-        final boolean z3;
+        mslkofp mslkofpVar = null;
+        Throwable th = null;
+        boolean z2 = false;
+        boolean z3 = false;
         JSONArray jSONArrayQwpvrdy;
         JSONArray jSONArray;
-        int i;
+        int i = 0;
         JSONObject jSONObjectOptJSONObject;
         int i2;
         long[] jArr;
         EditText editText;
         wqrnifx wqrnifxVar = null;
-        czgynww czgynwwVar = null;
+        Throwable czgynwwVar = null;
+        Throwable eAlias = null;
         wqrnifxVar = null;
         int i3 = 6;
         long j = 0;
@@ -73,7 +74,7 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                     z4 = false;
                     wqrnifxVar = wqrnifxVarJdqigmr;
                     string = null;
-                } catch (nkemejx e) {
+                } catch (RuntimeException e) {
                     string = e.getMessage();
                     z = false;
                 } catch (Throwable th2) {
@@ -191,35 +192,35 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                                                 th = czgynwwVar;
                                                 z3 = false;
                                                 z2 = true;
-                                            } catch (czgynww e2) {
-                                                e = e2;
-                                                if ("ACK_REJECTED".equals(e.nmpwovh) || "RESULT_EXPIRED".equals(e.nmpwovh) || "JOB_NOT_FOUND".equals(e.nmpwovh)) {
-                                                    th = e;
+                                            } catch (RuntimeException e2) {
+                                                eAlias = e2;
+                                                if ("ACK_REJECTED".equals(((czgynww) eAlias).nmpwovh) || "RESULT_EXPIRED".equals(((czgynww) eAlias).nmpwovh) || "JOB_NOT_FOUND".equals(((czgynww) eAlias).nmpwovh)) {
+                                                    th = eAlias;
                                                     z2 = false;
                                                     z3 = true;
                                                 }
-                                                czgynwwVar = e;
+                                                czgynwwVar = eAlias;
                                                 i4 = i2 + 1;
                                                 mslkofpVar2 = mslkofpVar;
                                                 jArr2 = jArr;
                                                 i3 = 6;
                                                 j = 0;
                                             } catch (Throwable th6) {
-                                                e = th6;
-                                                czgynwwVar = e;
+                                                eAlias = th6;
+                                                czgynwwVar = eAlias;
                                                 i4 = i2 + 1;
                                                 mslkofpVar2 = mslkofpVar;
                                                 jArr2 = jArr;
                                                 i3 = 6;
                                                 j = 0;
                                             }
-                                        } catch (czgynww e3) {
-                                            e = e3;
+                                        } catch (RuntimeException e3) {
+                                            eAlias = e3;
                                             i2 = i4;
                                             jArr = jArr2;
                                             mslkofpVar = mslkofpVar2;
                                         } catch (Throwable th7) {
-                                            e = th7;
+                                            eAlias = th7;
                                             i2 = i4;
                                             jArr = jArr2;
                                             mslkofpVar = mslkofpVar2;
@@ -236,7 +237,6 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                             }
                             synchronized (mainActivity4.lbyddwl) {
                                 mainActivity4.sxcwslq = false;
-                                break;
                             }
                             if (!z2 || z3) {
                                 synchronized (mainActivity4.lbyddwl) {
@@ -256,15 +256,18 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                                     break;
                                 }
                             }
+                            final Throwable thAlias1 = th;
+                            final boolean z2Alias1 = z2;
+                            final boolean z3Alias1 = z3;
                             final mslkofp mslkofpVar3 = mslkofpVar;
                             mainActivity4.runOnUiThread(new Runnable() { // from class: x.lsgjyur
                                 @Override // java.lang.Runnable
                                 public final void run() {
                                     MainActivity mainActivity5 = mainActivity4;
-                                    boolean z5 = z2;
+                                    boolean z5 = z2Alias1;
                                     mslkofp mslkofpVar4 = mslkofpVar3;
-                                    boolean z6 = z3;
-                                    Throwable th9 = th;
+                                    boolean z6 = z3Alias1;
+                                    Throwable th9 = thAlias1;
                                     xhyvkax xhyvkaxVar2 = xhyvkaxVar;
                                     int[] iArr2 = MainActivity.rzsxsyc;
                                     mainActivity5.getClass();
@@ -309,7 +312,6 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                                     }
                                 }
                                 mainActivity4.getSharedPreferences("xiaomi_auth_pending_ack", 0).edit().putString("queue_json", jSONArray.toString()).commit();
-                                break;
                             }
                         } else {
                             synchronized (mainActivity4.lbyddwl) {
@@ -322,18 +324,20 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                                     }
                                 }
                                 mainActivity4.getSharedPreferences("xiaomi_auth_pending_ack", 0).edit().putString("queue_json", jSONArray.toString()).commit();
-                                break;
                             }
                         }
+                        final Throwable thAlias2 = th;
+                        final boolean z2Alias2 = z2;
+                        final boolean z3Alias2 = z3;
                         final mslkofp mslkofpVar4 = mslkofpVar;
                         mainActivity4.runOnUiThread(new Runnable() { // from class: x.lsgjyur
                             @Override // java.lang.Runnable
                             public final void run() {
                                 MainActivity mainActivity5 = mainActivity4;
-                                boolean z5 = z2;
+                                boolean z5 = z2Alias2;
                                 mslkofp mslkofpVar5 = mslkofpVar4;
-                                boolean z6 = z3;
-                                Throwable th10 = th;
+                                boolean z6 = z3Alias2;
+                                Throwable th10 = thAlias2;
                                 xhyvkax xhyvkaxVar2 = xhyvkaxVar;
                                 int[] iArr2 = MainActivity.rzsxsyc;
                                 mainActivity5.getClass();
@@ -355,11 +359,6 @@ public final /* synthetic */ class ekyqleu implements Runnable {
                         });
                         return;
                     }
-                    i4 = i2 + 1;
-                    mslkofpVar2 = mslkofpVar;
-                    jArr2 = jArr;
-                    i3 = 6;
-                    j = 0;
                 }
                 break;
             case 4:

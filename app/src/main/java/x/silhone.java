@@ -33,6 +33,7 @@ public final /* synthetic */ class silhone implements Runnable {
         int i;
         suqlntg suqlntgVar2;
         suqlntg suqlntgVar3;
+        Throwable thAlias = null;
         switch (this.nmpwovh) {
             case 0:
                 kggugdp kggugdpVar = this.ojyssqt;
@@ -132,15 +133,15 @@ public final /* synthetic */ class silhone implements Runnable {
                             }
                             suqlntgVar2 = new suqlntg(i8, strNativeRunGuiAction);
                         } catch (Throwable th3) {
-                            th = th3;
-                            kggugdpVar3.nsyqsfj = (kggugdpVar3.qwgjehf && kggugdpVar3.nativeHasSession()) ? i : 0;
+                            thAlias = th3;
+                            kggugdpVar3.nsyqsfj = (kggugdpVar3.qwgjehf && kggugdpVar3.nativeHasSession()) ? true : false;
                             if (!kggugdpVar3.nsyqsfj) {
                                 kggugdpVar3.xvxmcgn = "—";
                             }
-                            suqlntgVar2 = new suqlntg(i, kggugdpVar3.getString(R.string.error_gui_jni, String.valueOf(th)));
+                            suqlntgVar2 = new suqlntg(i, kggugdpVar3.getString(R.string.error_gui_jni, String.valueOf(thAlias)));
                         }
                     } catch (Throwable th4) {
-                        th = th4;
+                        thAlias = th4;
                         i = 1;
                     }
                     suqlntgVar3 = suqlntgVar2;

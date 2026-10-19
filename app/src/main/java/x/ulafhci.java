@@ -154,7 +154,12 @@ public final class ulafhci implements AutoCloseable {
         if (str == null || str.trim().isEmpty()) {
             throw new IllegalArgumentException("ADB shell command is empty");
         }
-        ulafhci ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        ulafhci ulafhciVar;
+        try {
+            ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
         try {
             ulafhciVar.lthborb();
             String strPvbzgon = ulafhciVar.pvbzgon(str.trim());
@@ -166,7 +171,7 @@ public final class ulafhci implements AutoCloseable {
             } catch (Throwable th2) {
                 th.addSuppressed(th2);
             }
-            throw th;
+            throw new RuntimeException(th);
         }
     }
 
@@ -183,7 +188,12 @@ public final class ulafhci implements AutoCloseable {
     public static wqrnifx jdqigmr(Context context, UsbDevice usbDevice, UsbDeviceConnection usbDeviceConnection) {
         int iIndexOf;
         String strTrim = "device";
-        ulafhci ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        ulafhci ulafhciVar;
+        try {
+            ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
         try {
             ulafhciVar.lthborb();
             String[] strArrSplit = ulafhciVar.pvbzgon("getprop ro.product.model; getprop ro.product.name; getprop ro.build.version.release; getprop ro.build.version.sdk; getprop ro.serialno").replace("\r", "").split("\n", -1);
@@ -222,7 +232,7 @@ public final class ulafhci implements AutoCloseable {
             } catch (Throwable th2) {
                 th.addSuppressed(th2);
             }
-            throw th;
+            throw new RuntimeException(th);
         }
     }
 
@@ -322,7 +332,12 @@ public final class ulafhci implements AutoCloseable {
             throw new IllegalArgumentException("Unsupported ADB reboot target: " + str);
         }
         String str2 = "system".equals(lowerCase) ? "" : lowerCase;
-        ulafhci ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        ulafhci ulafhciVar;
+        try {
+            ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
         try {
             ulafhciVar.lthborb();
             ulafhciVar.oqexvyb("reboot:".concat(str2));
@@ -333,7 +348,7 @@ public final class ulafhci implements AutoCloseable {
             } catch (Throwable th2) {
                 th.addSuppressed(th2);
             }
-            throw th;
+            throw new RuntimeException(th);
         }
     }
 
@@ -341,7 +356,12 @@ public final class ulafhci implements AutoCloseable {
         if (str == null || str.trim().isEmpty()) {
             throw new IllegalArgumentException("ADB shell command is empty");
         }
-        ulafhci ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        ulafhci ulafhciVar;
+        try {
+            ulafhciVar = new ulafhci(context, usbDevice, usbDeviceConnection);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
         try {
             ulafhciVar.lthborb();
             oqexvyb oqexvybVarImuemzb = ulafhciVar.imuemzb("shell:" + str.trim());
@@ -380,7 +400,7 @@ public final class ulafhci implements AutoCloseable {
             } catch (Throwable th4) {
                 th3.addSuppressed(th4);
             }
-            throw th3;
+            throw new RuntimeException(th3);
         }
     }
 
@@ -488,7 +508,7 @@ public final class ulafhci implements AutoCloseable {
             } catch (Throwable th5) {
                 th4.addSuppressed(th5);
             }
-            throw th4;
+            throw new RuntimeException(th4);
         }
     }
 
@@ -496,7 +516,7 @@ public final class ulafhci implements AutoCloseable {
         int i4;
         int i5;
         if (Thread.currentThread().isInterrupted()) {
-            throw new InterruptedException("ADB operation cancelled");
+            throw new RuntimeException(new InterruptedException("ADB operation cancelled"));
         }
         if (bArr == null) {
             bArr = new byte[0];
@@ -565,14 +585,14 @@ public final class ulafhci implements AutoCloseable {
         }
     }
 
-    public final void dasxvpc(byte[] bArr, boolean z) {
+    public final void dasxvpc(byte[] bArr, boolean z) throws dytyqos {
         int iMin;
         int iMax;
         int i = 0;
         int i2 = 0;
         while (i < bArr.length) {
             if (Thread.currentThread().isInterrupted()) {
-                throw new InterruptedException("ADB operation cancelled");
+                throw new RuntimeException(new InterruptedException("ADB operation cancelled"));
             }
             int i3 = this.pvbzgon;
             byte[] bArr2 = this.buswjhz;
@@ -628,7 +648,7 @@ public final class ulafhci implements AutoCloseable {
         }
     }
 
-    public final imuemzb dplrlfq() {
+    public final imuemzb dplrlfq() throws dytyqos {
         byte[] bArr = new byte[24];
         dasxvpc(bArr, true);
         ByteBuffer byteBufferOrder = ByteBuffer.wrap(bArr).order(ByteOrder.LITTLE_ENDIAN);
@@ -678,6 +698,7 @@ public final class ulafhci implements AutoCloseable {
                 }
                 try {
                     imuemzbVarDplrlfq = dplrlfq();
+                    break;
                 } catch (dytyqos unused) {
                     i3++;
                 }
@@ -863,7 +884,6 @@ public final class ulafhci implements AutoCloseable {
                                 break;
                             }
                             throw new IllegalStateException("ADB service refused before OPEN acknowledgement: " + str);
-                            i2++;
                         }
                     } catch (dytyqos unused) {
                         i2 = 0;
@@ -877,7 +897,7 @@ public final class ulafhci implements AutoCloseable {
         }
     }
 
-    public final String pvbzgon(String str) {
+    public final String pvbzgon(String str) throws InterruptedException, IOException {
         return nkemejx(120, "shell:" + str, false);
     }
 
@@ -948,7 +968,7 @@ public final class ulafhci implements AutoCloseable {
             } catch (Throwable th5) {
                 th4.addSuppressed(th5);
             }
-            throw th4;
+            throw new RuntimeException(th4);
         }
     }
 
@@ -1010,7 +1030,7 @@ public final class ulafhci implements AutoCloseable {
             if (fileQxvquar != null && fileQxvquar.exists() && !fileQxvquar.delete()) {
                 fileQxvquar.deleteOnExit();
             }
-            throw th5;
+            throw new RuntimeException(th5);
         }
     }
 }

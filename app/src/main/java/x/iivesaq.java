@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /* JADX INFO: loaded from: classes.dex */
@@ -20,7 +21,7 @@ public abstract class iivesaq {
     public static final Pattern nmpwovh = Pattern.compile("(?m)^\\s*RYNX_VERSION_CODE\\s*=\\s*(\\d+)\\s*$");
     public static final Pattern ojyssqt = Pattern.compile("(?m)^\\s*RYNX_VERSION_NAME\\s*=\\s*(.+?)\\s*$");
 
-    public static ziuhthw nmpwovh() throws ProtocolException {
+    public static ziuhthw nmpwovh() throws ProtocolException, IOException, JSONException {
         String strOptString;
         HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("https://api.github.com/repos/OWNER/rynx/releases/latest").openConnection();
         httpURLConnection.setRequestMethod("GET");
@@ -49,8 +50,7 @@ public abstract class iivesaq {
             JSONArray jSONArrayOptJSONArray = jSONObject.optJSONArray("assets");
             if (jSONArrayOptJSONArray == null) {
                 strOptString = null;
-                break;
-            }
+            } else {
             int i = 0;
             while (true) {
                 if (i >= jSONArrayOptJSONArray.length()) {
@@ -66,6 +66,7 @@ public abstract class iivesaq {
                     }
                 }
                 i++;
+            }
             }
             ziuhthw ziuhthwVar = new ziuhthw(j, strTrim, strOptString2.replaceAll("(?m)^\\s*RYNX_VERSION_CODE\\s*=.*(?:\\R|$)", "").replaceAll("(?m)^\\s*RYNX_VERSION_NAME\\s*=.*(?:\\R|$)", "").trim(), strOptString != null ? strOptString : jSONObject.optString("html_url", ""));
             httpURLConnection.disconnect();

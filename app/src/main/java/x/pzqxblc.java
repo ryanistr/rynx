@@ -34,7 +34,7 @@ public final /* synthetic */ class pzqxblc implements View.OnClickListener {
                 break;
             case 1:
                 ArrayList<Integer> arrayList = new ArrayList();
-                for (rpdxrib rpdxribVar : (ArrayList) this.ojyssqt) {
+                for (rpdxrib rpdxribVar : (ArrayList<rpdxrib>) this.ojyssqt) {
                     if (rpdxribVar.vivhedu.isChecked()) {
                         arrayList.add(Integer.valueOf(rpdxribVar.nmpwovh.nmpwovh));
                     }
@@ -89,7 +89,7 @@ public final /* synthetic */ class pzqxblc implements View.OnClickListener {
                 break;
             case 3:
                 ArrayList<Integer> arrayList3 = new ArrayList();
-                for (eqqqfvj eqqqfvjVar : (ArrayList) this.ojyssqt) {
+                for (eqqqfvj eqqqfvjVar : (ArrayList<eqqqfvj>) this.ojyssqt) {
                     if (eqqqfvjVar.vivhedu.isChecked()) {
                         arrayList3.add(Integer.valueOf(eqqqfvjVar.nmpwovh.nmpwovh));
                     }

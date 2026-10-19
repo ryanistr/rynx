@@ -191,7 +191,7 @@ public final class ecffprn {
         this.utmeivs.setOnItemClickListener(new AdapterView.OnItemClickListener() { // from class: x.nsbgblf
             @Override // android.widget.AdapterView.OnItemClickListener
             public final void onItemClick(AdapterView adapterView, View view, int i, long j) {
-                ecffprn ecffprnVar = this.nmpwovh;
+                ecffprn ecffprnVar = ecffprn.this;
                 File item = ecffprnVar.pvbzgon.getItem(i);
                 if (item == null) {
                     return;
@@ -232,7 +232,7 @@ public final class ecffprn {
         this.wqrnifx.setOnKeyListener(new DialogInterface.OnKeyListener() { // from class: x.ffhrwhh
             @Override // android.content.DialogInterface.OnKeyListener
             public final boolean onKey(DialogInterface dialogInterface, int i, KeyEvent keyEvent) {
-                ecffprn ecffprnVar = this.nmpwovh;
+                ecffprn ecffprnVar = ecffprn.this;
                 ecffprnVar.getClass();
                 if (i != 4 || keyEvent.getAction() != 1) {
                     return false;

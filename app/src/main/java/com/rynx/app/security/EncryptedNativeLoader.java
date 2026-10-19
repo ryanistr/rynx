@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -139,10 +140,11 @@ public final class EncryptedNativeLoader {
         } catch (Throwable th3) {
             th = th3;
             bArrNmpwovh = null;
+            throw th;
         }
     }
 
-    public static String ojyssqt(byte[] bArr) {
+    public static String ojyssqt(byte[] bArr) throws NoSuchAlgorithmException {
         byte[] bArrDigest = MessageDigest.getInstance("SHA-256").digest(bArr);
         StringBuilder sb = new StringBuilder(24);
         for (int i = 0; i < 12; i++) {
@@ -181,7 +183,7 @@ public final class EncryptedNativeLoader {
     }
 
     /* JADX WARN: Multi-variable type inference failed */
-    public static synchronized void vivhedu(Context context, String str, String str2, String str3) {
+    public static synchronized void vivhedu(Context context, String str, String str2, String str3) throws Throwable {
         HashSet hashSet = nmpwovh;
         if (hashSet.contains(str3)) {
             return;

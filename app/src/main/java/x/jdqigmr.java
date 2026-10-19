@@ -23,9 +23,10 @@ public final /* synthetic */ class jdqigmr implements mwngani {
     }
 
     @Override // x.mwngani
-    public final String nmpwovh(UsbDevice usbDevice, UsbDeviceConnection usbDeviceConnection) throws IOException {
+    public final String nmpwovh(UsbDevice usbDevice, UsbDeviceConnection usbDeviceConnection) {
         switch (this.nmpwovh) {
             case 0:
+                Throwable thAlias = null;
                 Context applicationContext = this.ojyssqt.getApplicationContext();
                 String str = this.lthborb;
                 if (str == null || str.trim().isEmpty()) {
@@ -39,7 +40,12 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                 if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs() && !parentFile.isDirectory()) {
                     throw new IllegalStateException("Unable to create local directory: " + parentFile);
                 }
-                File fileQxvquar = ulafhci.qxvquar(file);
+                File fileQxvquar;
+                try {
+                    fileQxvquar = ulafhci.qxvquar(file);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 try {
                     ulafhci ulafhciVar = new ulafhci(applicationContext, usbDevice, usbDeviceConnection);
                     try {
@@ -65,38 +71,35 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                                 } catch (Throwable th) {
                                     try {
                                         fileOutputStream.close();
-                                        break;
                                     } catch (Throwable th2) {
                                         th.addSuppressed(th2);
                                     }
-                                    throw th;
+                                    throw new RuntimeException(th);
                                 }
                                 try {
                                     oqexvybVarImuemzb.close();
-                                    break;
                                 } catch (Throwable th3) {
-                                    th.addSuppressed(th3);
+                                    thAlias.addSuppressed(th3);
                                 }
-                                throw th;
+                                throw new RuntimeException(thAlias);
                             }
                         } catch (Throwable th4) {
                             oqexvybVarImuemzb.close();
-                            throw th4;
+                            throw new RuntimeException(th4);
                         }
                     } catch (Throwable th5) {
                         try {
                             ulafhciVar.close();
-                            break;
                         } catch (Throwable th6) {
                             th5.addSuppressed(th6);
                         }
-                        throw th5;
+                        throw new RuntimeException(th5);
                     }
                 } catch (Throwable th7) {
                     if (fileQxvquar != null && fileQxvquar.exists() && !fileQxvquar.delete()) {
                         fileQxvquar.deleteOnExit();
                     }
-                    throw th7;
+                    throw new RuntimeException(th7);
                 }
             case 1:
                 Context applicationContext2 = this.ojyssqt.getApplicationContext();
@@ -108,7 +111,12 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                 if (str2 == null || str2.trim().isEmpty()) {
                     throw new IllegalArgumentException("Remote path is empty");
                 }
-                ulafhci ulafhciVar2 = new ulafhci(applicationContext2, usbDevice, usbDeviceConnection);
+                ulafhci ulafhciVar2;
+                try {
+                    ulafhciVar2 = new ulafhci(applicationContext2, usbDevice, usbDeviceConnection);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 try {
                     ulafhciVar2.lthborb();
                     ulafhciVar2.atntgcp(file2, str2.trim());
@@ -118,11 +126,10 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                 } catch (Throwable th8) {
                     try {
                         ulafhciVar2.close();
-                        break;
                     } catch (Throwable th9) {
                         th8.addSuppressed(th9);
                     }
-                    throw th8;
+                    throw new RuntimeException(th8);
                 }
             case 2:
                 Context applicationContext3 = this.ojyssqt.getApplicationContext();
@@ -135,7 +142,12 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                 if (parentFile2 != null && !parentFile2.exists() && !parentFile2.mkdirs() && !parentFile2.isDirectory()) {
                     throw new IllegalStateException("Unable to create local directory: " + parentFile2);
                 }
-                ulafhci ulafhciVar3 = new ulafhci(applicationContext3, usbDevice, usbDeviceConnection);
+                ulafhci ulafhciVar3;
+                try {
+                    ulafhciVar3 = new ulafhci(applicationContext3, usbDevice, usbDeviceConnection);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 try {
                     ulafhciVar3.lthborb();
                     long jZwaqeaz = ulafhciVar3.zwaqeaz(file3, str3.trim());
@@ -144,11 +156,10 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                 } catch (Throwable th10) {
                     try {
                         ulafhciVar3.close();
-                        break;
                     } catch (Throwable th11) {
                         th10.addSuppressed(th11);
                     }
-                    throw th10;
+                    throw new RuntimeException(th10);
                 }
             default:
                 Context applicationContext4 = this.ojyssqt.getApplicationContext();
@@ -157,7 +168,12 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                     throw new IllegalArgumentException("APK not found: " + file4);
                 }
                 String str4 = "/data/local/tmp/rynx-" + System.currentTimeMillis() + "-" + file4.getName().replaceAll("[^A-Za-z0-9._-]", "_");
-                ulafhci ulafhciVar4 = new ulafhci(applicationContext4, usbDevice, usbDeviceConnection);
+                ulafhci ulafhciVar4;
+                try {
+                    ulafhciVar4 = new ulafhci(applicationContext4, usbDevice, usbDeviceConnection);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 try {
                     ulafhciVar4.lthborb();
                     ulafhciVar4.atntgcp(file4, str4);
@@ -174,7 +190,6 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                         String strPvbzgon = ulafhciVar4.pvbzgon(sb.toString());
                         try {
                             ulafhciVar4.pvbzgon("rm -f " + ulafhci.qyeibyo(str4));
-                            break;
                         } catch (Throwable unused) {
                         }
                         ulafhciVar4.close();
@@ -182,19 +197,17 @@ public final /* synthetic */ class jdqigmr implements mwngani {
                     } catch (Throwable th12) {
                         try {
                             ulafhciVar4.pvbzgon("rm -f " + ulafhci.qyeibyo(str4));
-                            break;
                         } catch (Throwable unused2) {
                         }
-                        throw th12;
+                        throw new RuntimeException(th12);
                     }
                 } catch (Throwable th13) {
                     try {
                         ulafhciVar4.close();
-                        break;
                     } catch (Throwable th14) {
                         th13.addSuppressed(th14);
                     }
-                    throw th13;
+                    throw new RuntimeException(th13);
                 }
         }
     }

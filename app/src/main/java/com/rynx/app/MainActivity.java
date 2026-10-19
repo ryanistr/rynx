@@ -251,7 +251,6 @@ public class MainActivity extends kggugdp {
                     return x.zamkzqg.rvrflql(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar, str, iArrYomtcav[0], iArrYomtcav[1]);
                 }
                 break;
-                break;
             }
             long j = i2;
             if (jElapsedRealtime2 <= 1500 + j) {
@@ -274,8 +273,6 @@ public class MainActivity extends kggugdp {
                     }
                     czgynwwVar = e2;
                 }
-            } catch (IOException e3) {
-                iOException = e3;
             } catch (czgynww e4) {
                 czgynwwVar = e4;
             }
@@ -345,7 +342,6 @@ public class MainActivity extends kggugdp {
                     return x.zamkzqg.guecdgy(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar, str, iArrYomtcav[0], iArrYomtcav[1]);
                 }
                 break;
-                break;
             }
             long j = i2;
             if (jElapsedRealtime2 <= 1500 + j) {
@@ -368,8 +364,6 @@ public class MainActivity extends kggugdp {
                     }
                     czgynwwVar = e2;
                 }
-            } catch (IOException e3) {
-                iOException = e3;
             } catch (czgynww e4) {
                 czgynwwVar = e4;
             }
@@ -2199,7 +2193,7 @@ public class MainActivity extends kggugdp {
             } catch (Throwable th2) {
                 th.addSuppressed(th2);
             }
-            throw th;
+            throw new RuntimeException(th);
         }
     }
 
@@ -2698,7 +2692,7 @@ public class MainActivity extends kggugdp {
     @Override // com.rynx.app.ojyssqt, android.app.Activity
     public final void onActivityResult(int i, int i2, Intent intent) {
         String path;
-        int iIndexOf;
+        int iIndexOf = -1;
         String strSubstring;
         File file;
         String treeDocumentId;
@@ -3326,9 +3320,9 @@ public class MainActivity extends kggugdp {
     /* JADX WARN: Code duplicated, block: B:66:0x0108  */
     /* JADX WARN: Code duplicated, block: B:72:0x00dc A[EXC_TOP_SPLITTER, SYNTHETIC] */
     public String requestManualBromSlaResponse(String str) {
-        long j;
+        long j = 0L;
         boolean z;
-        boolean z2;
+        boolean z2 = false;
         boolean z3;
         int i;
         if (!useManualBromSlaForSelectedDa()) {
@@ -3895,6 +3889,7 @@ public class MainActivity extends kggugdp {
             runOnUiThread(new yrgokys(this, 4));
             return "ERR:SLA server is not configured";
         }
+        try {
         jSONObjectWdznaie = wdznaie(str32);
         jSONObjectWdznaie.put("action", "sign");
         if (str2 == null) {
@@ -4063,6 +4058,11 @@ public class MainActivity extends kggugdp {
         runOnUiThread(new yrgokys(this, 5));
         httpURLConnectionCxxnoho.disconnect();
         return "ERR:Username / password Wrong";
+        } catch (JSONException jsonException) {
+            return "ERR:SLA request encoding failed: " + jsonException.getClass().getSimpleName();
+        } catch (IOException ioException) {
+            return "ERR:SLA server connection failed: " + ioException.getClass().getSimpleName();
+        }
     }
 
     public final void seujokk(String str) {
@@ -4370,7 +4370,7 @@ public class MainActivity extends kggugdp {
                     th.addSuppressed(th2);
                 }
             }
-            throw th;
+            throw new RuntimeException(th);
         }
     }
 
@@ -4641,7 +4641,6 @@ public class MainActivity extends kggugdp {
                     return x.zamkzqg.lsgjyur(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar, hiofinrVar, str, str2, str3, str4, str5, str6, iArrYomtcav[0], iArrYomtcav[1]);
                 }
                 break;
-                break;
             }
             long jMin = Math.min(1000L, 100 << Math.min(i2 - 1, 3));
             if (jElapsedRealtime2 <= 1500 + jMin) {
@@ -4721,18 +4720,18 @@ public class MainActivity extends kggugdp {
                     String strGroup;
                     String str2;
                     String lowerCase;
-                    String str3;
-                    String str4;
-                    String str5;
-                    String str6;
-                    int i3;
+                    String str3 = null;
+                    String str4 = null;
+                    String str5 = null;
+                    String str6 = null;
+                    int i3 = 0;
                     boolean z3;
-                    String str7;
-                    String str8;
-                    String str9;
-                    String str10;
-                    String str11;
-                    String str12;
+                    String str7 = null;
+                    String str8 = null;
+                    String str9 = null;
+                    String str10 = null;
+                    String str11 = null;
+                    String str12 = null;
                     Matcher matcher2;
                     String strGroup2;
                     String str13;
@@ -4749,6 +4748,7 @@ public class MainActivity extends kggugdp {
                     if (i6 < 0) {
                         suqlntgVar = new suqlntg(2, mainActivity.getString(R.string.error_usb_lost_session));
                     } else {
+                        suqlntg suqlntgVarLocal;
                         try {
                             long j = oxoagudVarEzxxysz.ojyssqt;
                             if (str14 == null) {
@@ -4779,13 +4779,14 @@ public class MainActivity extends kggugdp {
                             if (strNativeConnectSession == null) {
                                 strNativeConnectSession = mainActivity.getString(R.string.error_jni_null);
                             }
-                            suqlntgVar = new suqlntg(i8, strNativeConnectSession);
+                            suqlntgVarLocal = new suqlntg(i8, strNativeConnectSession);
                         } catch (Throwable th) {
                             mainActivity.nsyqsfj = false;
                             mainActivity.cnctlxz = x.ednetju.ojyssqt();
                             mainActivity.xvxmcgn = "—";
-                            suqlntgVar = new suqlntg(1, mainActivity.getString(R.string.error_session_jni, String.valueOf(th)));
+                            suqlntgVarLocal = new suqlntg(1, mainActivity.getString(R.string.error_session_jni, String.valueOf(th)));
                         }
+                        suqlntgVar = suqlntgVarLocal;
                     }
                     synchronized (mainActivity.ibfmasn) {
                         try {
@@ -5641,15 +5642,6 @@ public class MainActivity extends kggugdp {
                                 }
                                 return "ERR:Xiaomi authorization failed: ".concat(th.getClass().getSimpleName());
                             }
-                        } catch (IOException e8) {
-                            str3 = strJybecxv;
-                            z2 = false;
-                        } catch (InterruptedException unused2) {
-                            str3 = strJybecxv;
-                            z2 = false;
-                        } catch (czgynww e9) {
-                            str3 = strJybecxv;
-                            z3 = false;
                         } catch (Throwable th2) {
                             str3 = strJybecxv;
                             z2 = false;

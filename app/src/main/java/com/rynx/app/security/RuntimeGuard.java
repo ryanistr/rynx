@@ -96,7 +96,6 @@ public final class RuntimeGuard {
                     }
                     throw th;
                 }
-                return true;
             } while (!line.startsWith("TracerPid:"));
             boolean z = !"0".equals(line.substring(line.indexOf(58) + 1).trim());
             bufferedReader.close();

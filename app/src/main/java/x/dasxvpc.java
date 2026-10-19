@@ -26,7 +26,7 @@ public final class dasxvpc {
                 byte[] Nmpwovh = ((oqexvyb) this.ojyssqt).nmpwovh();
                 this.vivhedu = Nmpwovh;
                 this.nmpwovh = 0;
-                if (Nmpwovh == 0) {
+                if (Nmpwovh == null) {
                     throw new IllegalStateException("ADB stream closed unexpectedly");
                 }
             }

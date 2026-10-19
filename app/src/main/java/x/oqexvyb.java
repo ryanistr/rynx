@@ -49,11 +49,12 @@ public final class oqexvyb implements AutoCloseable {
                     throw new IllegalStateException("ADB stream read timed out");
                 }
                 if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException("ADB stream cancelled");
+                    throw new RuntimeException(new InterruptedException("ADB stream cancelled"));
                 }
                 try {
                     imuemzbVarDplrlfq = ulafhciVar.dplrlfq();
-                } catch (dytyqos unused) {
+                    break;
+                } catch (Throwable unused) {
                     i++;
                 }
             }
@@ -97,7 +98,8 @@ public final class oqexvyb implements AutoCloseable {
                     }
                     try {
                         imuemzbVarDplrlfq = ulafhciVar.dplrlfq();
-                    } catch (dytyqos unused) {
+                        break;
+                    } catch (Throwable unused) {
                         i4++;
                     }
                 }
@@ -125,6 +127,7 @@ public final class oqexvyb implements AutoCloseable {
                         throw new IllegalStateException("ADB stream closed while writing");
                     }
                 }
+                break;
             }
             i = iMin;
         }

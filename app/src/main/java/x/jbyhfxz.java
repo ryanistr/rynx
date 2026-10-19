@@ -29,8 +29,8 @@ public final /* synthetic */ class jbyhfxz implements Runnable {
 
     @Override // java.lang.Runnable
     public final void run() {
-        final ghkjjru ghkjjruVarSaksmfq;
-        final String str;
+        ghkjjru ghkjjruVarSaksmfqTmp;
+        String strTmp;
         File[] fileArrListFiles;
         List listEmptyList;
         switch (this.nmpwovh) {
@@ -39,16 +39,18 @@ public final /* synthetic */ class jbyhfxz implements Runnable {
                 final com.rynx.app.nmpwovh nmpwovhVar = (com.rynx.app.nmpwovh) this.vivhedu;
                 nmpwovhVar.getClass();
                 try {
-                    str = null;
-                    ghkjjruVarSaksmfq = zamkzqg.saksmfq(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar);
+                    strTmp = null;
+                    ghkjjruVarSaksmfqTmp = zamkzqg.saksmfq(com.rynx.app.ojyssqt.jxvdcpb(), xhyvkaxVar);
                 } catch (Throwable th) {
                     String message = th.getMessage();
                     if (message == null || message.trim().isEmpty()) {
                         message = nmpwovhVar.getString(R.string.xiaomi_authorize_unknown_error);
                     }
-                    ghkjjruVarSaksmfq = null;
-                    str = message;
+                    ghkjjruVarSaksmfqTmp = null;
+                    strTmp = message;
                 }
+                final ghkjjru ghkjjruVarSaksmfq = ghkjjruVarSaksmfqTmp;
+                final String str = strTmp;
                 final int i = this.ojyssqt;
                 nmpwovhVar.runOnUiThread(new Runnable() { // from class: x.cszfvxh
                     @Override // java.lang.Runnable

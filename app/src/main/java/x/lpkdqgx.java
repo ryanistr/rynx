@@ -36,11 +36,12 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
         String str2;
         String str3;
         MainActivity mainActivity;
-        suqlntg suqlntgVar;
+        suqlntg suqlntgVar = null;
         boolean z;
         String str4;
         ohwxijw ohwxijwVar;
-        suqlntg suqlntgVar2;
+        suqlntg suqlntgVar2 = null;
+        Throwable thAlias = null;
         switch (this.nmpwovh) {
             case 0:
                 MainActivity mainActivity2 = (MainActivity) this.oqexvyb;
@@ -90,7 +91,7 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
                             suqlntgVar = new suqlntg(1, mainActivity.getString(R.string.error_gui_jni, String.valueOf(th)));
                         }
                     } catch (Throwable th2) {
-                        th = th2;
+                        thAlias = th2;
                         str = "—";
                         str2 = str6;
                         str3 = str5;
@@ -131,15 +132,15 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
                             }
                             suqlntgVar2 = new suqlntg(i6, strNativeRunGuiAction2);
                         } catch (Throwable th3) {
-                            th = th3;
+                            thAlias = th3;
                             mainActivity3.nsyqsfj = mainActivity3.qwgjehf && mainActivity3.nativeHasSession();
                             if (!mainActivity3.nsyqsfj) {
                                 mainActivity3.xvxmcgn = str4;
                             }
-                            suqlntgVar2 = new suqlntg(1, mainActivity3.getString(R.string.error_gui_jni, String.valueOf(th)));
+                            suqlntgVar2 = new suqlntg(1, mainActivity3.getString(R.string.error_gui_jni, String.valueOf(thAlias)));
                         }
                     } catch (Throwable th4) {
-                        th = th4;
+                        thAlias = th4;
                         str4 = "—";
                         ohwxijwVar = ohwxijwVar2;
                     }
