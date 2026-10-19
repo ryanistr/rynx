@@ -159,12 +159,17 @@ core is added. See `README.md` → Licensing.
 - What *is* verified on hardware: the app installs, launches and keeps running with both libraries
   mapped into its address space, and the screens that read the payload labels render. The last
   build checked this way was `tools/build-apk.sh`'s output, APK
-  `md5 4bdaff9175bf0a5cb5d31b9e7510ced8`, on the X6739 test device: `adb install -r` reported
-  success, `am start -W` reported `TotalTime: 2324`, `pidof` gave a live process, and
-  `/proc/<pid>/maps` showed both `lib/arm64/librynx_core.so` and `lib/arm64/librynx_adbfastboot.so`
-  from that APK. Nothing in the run called a native method — the terminal screen is the app's own
-  non-root legacy console, and every entry point needs an open USB descriptor — so registration is
-  proven statically (section 2), not by a call.
+  `md5 4bc9f9803f330a30cf312228dd3823c7`: `adb install -r -d` reported success, `am start -W`
+  reported `TotalTime: 3713`, `pidof` gave a live process, a root read of `/proc/<pid>/maps` showed
+  both `lib/arm64/librynx_core.so` and `lib/arm64/librynx_adbfastboot.so` from that APK, the crash
+  buffer held nothing from the app, and `aapt2 dump badging` reports `versionCode='1'
+  versionName='0.1.0'`. One build earlier (`md5 331febdca0714f99b2979461c34f1854`, `TotalTime: 3108`)
+  is the run whose About screen the uiautomator dump read as `License: AGPL-3.0-or-later` together
+  with the AGPL notice and its gnu.org link; the licence resources are byte-identical in both
+  builds — `res/raw/agpl_3_0.txt`, 34 523 bytes — and neither APK carries an Apache licence string.
+  Nothing in either run called a native method — the terminal screen is the app's own non-root
+  legacy console, and every entry point needs an open USB descriptor — so registration is proven
+  statically (section 2), not by a call.
 - Linux and Windows are not built at all — see `docs/PLATFORMS.md` for what each target needs and
   which layers are already platform-independent.
 - The dispatch-id namespace of `nativeRunCommand` / `nativeRunGuiAction` is not enumerated: the

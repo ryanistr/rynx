@@ -21,12 +21,17 @@ PATH=$BT:$PATH
 
 mkdir -p "$OUT"
 
-# aapt2 needs a package attribute, which the Gradle build injects from `namespace`.
-python3 - "$ROOT/app/src/main/AndroidManifest.xml" "$OUT/AndroidManifest.xml" "$PKG" <<'PY'
+# aapt2 needs a package attribute and the app version, which Gradle injects from
+# `namespace` and `defaultConfig`.
+python3 - "$ROOT/app/src/main/AndroidManifest.xml" "$OUT/AndroidManifest.xml" "$PKG" "$ROOT/app/build.gradle.kts" <<'PY'
 import re, sys
-src, dst, pkg = sys.argv[1], sys.argv[2], sys.argv[3]
+src, dst, pkg, gradle = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 xml = open(src, encoding='utf-8').read()
-xml = re.sub(r'(<manifest\b[^>]*?)(\s*>)', r'\1 package="%s"\2' % pkg, xml, count=1)
+mod = open(gradle, encoding='utf-8').read()
+name = re.search(r'versionName\s*=\s*"([^"]+)"', mod).group(1)
+code = re.search(r'versionCode\s*=\s*(\d+)', mod).group(1)
+attrs = ' package="%s" android:versionCode="%s" android:versionName="%s"' % (pkg, code, name)
+xml = re.sub(r'(<manifest\b[^>]*?)(\s*>)', r'\1' + attrs + r'\2', xml, count=1)
 xml = re.sub(r'(<manifest\b[^>]*?>)',
              r'\1\n\n    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35" />', xml, count=1)
 open(dst, 'w', encoding='utf-8').write(xml)
