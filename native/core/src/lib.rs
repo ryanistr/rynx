@@ -38,7 +38,7 @@ use penumbra_mtk::hacc::{
     TryWrite,
 };
 use penumbra_mtk::port::ConnectionType;
-use penumbra_mtk::{BootMode, Error, MtkPort, Partition};
+use penumbra_mtk::{BootMode, Error, MtkPort, Partition, PlProtocol};
 use usbfs::{EP_IN_DEFAULT, EP_OUT_DEFAULT, Endpoints, UsbfsPort};
 
 /// The transport the session is built on: an open USB file descriptor plus `usbfs` ioctls, which is
@@ -687,9 +687,11 @@ fn firmware_upgrade(session: &mut Session, path: &str) -> Result<String, String>
     ))
 }
 
-/// `crash`: the engine has no SoC crash primitive, so the verb drops the transport instead —
-/// which is what the app uses it for (a DA session it wants abandoned). It is refused while the
-/// device is already running a DA.
+/// `crash`: hand the bootrom a garbage DA image, which trips its assertion and drops the SoC back
+/// into BROM — the mechanism the reference engine uses. The assertion kills the pipe, so the session
+/// is dropped either way; the app re-attaches the device and hands over a fresh descriptor, which is
+/// why the transport's own `reenumerate` is a no-op here. Refused while a DA is live: once a DA runs,
+/// only the DA protocol answers.
 fn crash() -> Result<String, String> {
     let mut guard = SESSION
         .lock()
@@ -700,18 +702,22 @@ fn crash() -> Result<String, String> {
     let connection = session.0.dev.get_connection_type();
     if connection == ConnectionType::Da {
         return Err(
-            "Penumbra crash is unavailable while the device is already in DA mode. Reboot to \
-             Preloader and try again."
+            "crash is unavailable while the device is already in DA mode: reboot to Preloader and \
+             try again"
                 .into(),
         );
-    }
-    if let Some(mut session) = guard.take() {
-        let _ = session.0.dev.port_mut().close();
     }
     let target = match connection {
         ConnectionType::Brom => "BROM",
         _ => "PRELOADER",
     };
+    if let Some(mut session) = guard.take() {
+        let port = session.0.dev.port_mut();
+        let mut protocol = PlProtocol::new(port);
+        let dummy = [0u8; 0x100];
+        let _ = protocol.send_da(&dummy, 0x100, 0, 0x100);
+        let _ = session.0.dev.port_mut().close();
+    }
     Ok(format!("CRASH TRIGGERED\nTARGET: {target}"))
 }
 

@@ -200,16 +200,31 @@ the template (`0x12318b`…`0x1232ee`): `SPFT-V5-TRANSACTION-4`, `SPFT-V6-TRANSA
 `BootControl slot must be 'a' or 'b'` fixes the operand case: the engine compares lowercase
 `a`/`b`, which matches the app lower-casing the slot letter before the call.
 
+One message is deliberately **not** reproduced verbatim: the DA-mode crash refusal above. Its
+operative sentence is kept — reboot to Preloader and try again — but the product name it opens with
+belongs to the engine and is not carried into a runtime string here. The payload text around it is
+unchanged.
+
 ## What this core does not reproduce
 
 Honest gaps, not oversights:
 
-* **`crash` has no SoC crash primitive.** The linked engine (`penumbra-mtk`, pinned in
-  `native/Cargo.toml`) exposes no crash command, so `crash` drops the USB transport instead of
-  faulting the SoC. It keeps the reference engine's payload and its DA-mode refusal.
+* **`crash` asserts the bootrom rather than re-handshaking it.** The verb pushes a garbage DA image
+  through the preloader protocol (`PlProtocol::send_da` with a 0x100-byte dummy) — the mechanism the
+  reference engine's own crash path uses — so the SoC falls back into BROM and the payload is
+  `CRASH TRIGGERED` + `TARGET: BROM`/`PRELOADER`, with the DA-mode refusal kept. What it does *not*
+  do is the reference's follow-up: re-enumerate and re-handshake the newly-crashed device. On
+  Android the descriptor belongs to the app, the assertion destroys it, and `UsbfsPort::reenumerate`
+  is a no-op by design (`native/usbfs/src/lib.rs:254`); the app re-attaches the device and hands over
+  a fresh descriptor, which is the same end state by a different route.
 * **`HW VERSION` / `SW VERSION` are emitted empty.** Those values come from the reference
   engine's own device-info struct; the linked engine's `DevInfoData` has no such fields, so the
-  labels are present (the app reads them) with no value rather than a fabricated one.
+  labels are present (the app reads them) with no value rather than a fabricated one. Precisely:
+  `penumbra-mtk` `core/src/device.rs:228` reads them (`let (hw_subcode, ..) = pl.get_hw_sw_ver()?;`)
+  and discards the two version numbers on the spot, and `core/src/devinfo.rs:20-29` has no field to
+  keep them in. Closing this needs a change in the engine crate — keep the pair in `DevInfoData` —
+  not in this core; the preloader command that returns them exists (`Command::GetHwSwVer = 0xFC`,
+  `core/src/preloader/cmd.rs:61`), so the data is on the wire already.
 * **Firmware-upgrade internals are reduced.** The reference engine runs a full transactional
   FWUP: immutable plan v2, protected-data record files, seccfg preservation and recovery,
   auto-relock policy, native backup bookkeeping, layout-migration detection. This core runs one
@@ -226,5 +241,6 @@ Honest gaps, not oversights:
   (`ev_ba3cf805881eabea865f6b003243e2258ffba453b18f053c74190a137aecff31`).
 * No `sgpt`, `efuse-read`, `readback`, `seccfg-set`, `read-partition` or `write-partition` verb
   exists in the pool, the pools adjacent to it, or the app's command gate.
-* No crash primitive: `penumbra-mtk` at the pinned revision has no `crash` in `DaProtocol`
-  (42 trait methods, none of them a crash/abort entry).
+* The engine's `DaProtocol` has no crash entry (42 trait methods, none of them a crash/abort), which
+  is why `crash` goes through the preloader protocol instead — the route the reference engine's own
+  crash path takes.

@@ -159,8 +159,8 @@ core is added. See `README.md` → Licensing.
 - What *is* verified on hardware: the app installs, launches and keeps running with both libraries
   mapped into its address space, and the screens that read the payload labels render. The last
   build checked this way was `tools/build-apk.sh`'s output, APK
-  `md5 6b9701ea444a5c8baffd743ccd8f1fd3`, on the X6739 test device: `adb install -r` reported
-  success, `am start -W` reported `TotalTime: 3398`, `pidof` gave a live process, and
+  `md5 4bdaff9175bf0a5cb5d31b9e7510ced8`, on the X6739 test device: `adb install -r` reported
+  success, `am start -W` reported `TotalTime: 2324`, `pidof` gave a live process, and
   `/proc/<pid>/maps` showed both `lib/arm64/librynx_core.so` and `lib/arm64/librynx_adbfastboot.so`
   from that APK. Nothing in the run called a native method — the terminal screen is the app's own
   non-root legacy console, and every entry point needs an open USB descriptor — so registration is
@@ -172,8 +172,10 @@ core is added. See `README.md` → Licensing.
   them too, so this core does the same.
 - `nativeSetUsbFd`'s `long` return and `nativeSetXiaomiAuthGeneration`'s effect are
   typed from the Java declarations only.
-- The reference engine's `crash` resets the SoC; this core's only closes the transport (see
-  `docs/NATIVE-ENGINE-RE.md`, "What this core does not reproduce").
+- `crash` reaches the same place as the reference engine (a BROM assertion through the preloader
+  protocol) but does not re-enumerate and re-handshake the crashed device afterwards: on Android the
+  descriptor is the app's, so the app re-attaches and hands over a fresh one. See
+  `docs/NATIVE-ENGINE-RE.md`, "What this core does not reproduce".
 
 ## 6. Result payload contract (established)
 
@@ -239,12 +241,13 @@ da, auth, preloader)` is the same shape without the verb and operands.
 | `seccfg` | `unlock` / `lock` only; any other action is refused verbatim | `SECCFG UPDATED` + `STATE` |
 | `reboot` | `normal`, `home-screen`, `fastboot`, `meta`, `test`; an empty operand means normal | `REBOOT COMPLETE` + `MODE` |
 | `shutdown` | power off | `SHUTDOWN COMPLETE` |
-| `crash` | drop the session; refused while a DA is live | `CRASH TRIGGERED` + `TARGET` |
+| `crash` | assert the bootrom with a garbage DA image, dropping the SoC to BROM; refused while a DA is live | `CRASH TRIGGERED` + `TARGET` |
 | `scatter-download-v6` | read the scatter, flash it, resolve images beside it | `DOWNLOAD ONLY COMPLETE` + `ENGINE/PARTITIONS` |
 | `scatter-firmware-upgrade` | protocol gate, flash the package, report the layout facts it measured | `FIRMWARE UPGRADE COMPLETE` … |
 
 Nothing above is verified against hardware: this machine has no MTK target on USB, so every
 USB/DA path is compile-, API- and unit-verified only (`cargo test -p rynx-core`, six payload
-tests). The three known gaps against the reference engine — `crash` without a SoC primitive, the
-empty `HW VERSION`/`SW VERSION` values, and the reduced firmware-upgrade transaction — are listed
-with their reasons in `docs/NATIVE-ENGINE-RE.md`.
+tests). The two remaining gaps against the reference engine — the empty `HW VERSION`/`SW VERSION`
+values (the engine crate reads those two numbers and discards them; `core/src/device.rs:228`) and
+the reduced firmware-upgrade transaction — are listed with their reasons in
+`docs/NATIVE-ENGINE-RE.md`.
