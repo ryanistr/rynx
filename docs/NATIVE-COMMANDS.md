@@ -44,6 +44,10 @@ There are two doors into `nativeRunCommand`/`nativeRunGuiAction`:
 The verb grammar itself is a literal allowlist in `x/cugubfc.java:10-13`, plus an
 alias-collapsing normaliser at `x/cugubfc.java:68-86`.
 
+The engine's own view of this namespace — which verbs it actually compares, and the payload
+each one answers with — is read out of its `.rodata` in `docs/NATIVE-ENGINE-RE.md`. Where the two
+records disagree, that one wins: it is the artifact, not a reading of the callers.
+
 ## Canonical grammar (verb allowlist)
 
 `x/cugubfc.java` holds the authoritative vocabulary as three literal sets.

@@ -23,7 +23,9 @@ has to provide is written down as a contract and a checklist in
     app/src/main/java/com/rynx/app/       entry point, UI, USB + flashing logic
     app/src/main/res/                     strings (en, in), colours, styles, vector icons
     docs/PARITY.md                        native ABI contract + capability checklist
-    native/README.md                      build plan for the native core
+    docs/NATIVE-COMMANDS.md               command namespace the app drives
+    docs/NATIVE-ENGINE-RE.md              reference-engine verb set and payload contract
+    native/README.md                      the native core: transport, session, dispatch
     CREDITS.md                            third-party projects this tool builds on
 
 ## Requirements

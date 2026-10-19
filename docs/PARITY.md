@@ -7,7 +7,7 @@ different build systems and have different completion states.
 | Layer | What it covers | State |
 | --- | --- | --- |
 | App layer (Java) | UI, screen flows, USB permission handling, ADB/Fastboot orchestration, update feed | present |
-| Native core (`arm64-v8a` `.so`) | BROM/Preloader handshake, DA upload and DA protocols, storage and partition operations, SLA signing, ADB/Fastboot protocol | **not in this repository yet** |
+| Native core (`arm64-v8a` `.so`) | BROM/Preloader handshake, DA upload and DA protocols, storage and partition operations, SLA signing, ADB/Fastboot protocol | `native/` (session, dispatch, usbfs; fastboot verbs still stubbed) |
 
 The app layer and the native core talk over a fixed JNI contract; that contract is
 recorded in section 2 and is the checklist for the core.
@@ -83,8 +83,12 @@ artifacts predate this project's package name and are replaced at build time.
 
 ## 3. Native core — capability checklist
 
-Everything below is required by the ABI in section 2 and by the app's screen flows,
-and none of it is in this repository yet.
+Everything below is required by the ABI in section 2 and by the app's screen flows. The
+engine-side half (protocols, storage, SLA, patching) is supplied by the crates listed in
+`CREDITS.md`; this repository supplies the transport, the session and the command layer.
+
+The command layer is aligned with the reference engine's own vocabulary and payload text — see
+`docs/NATIVE-ENGINE-RE.md` for the artifact evidence behind every label and message.
 
 - **Preloader / BROM**: preloader protocol, handshake, `MTK_BLOADER_INFO` read,
   preloader backup/restore, EMI settings, BROM security handshake and exploit paths
@@ -127,12 +131,16 @@ core is added. See `README.md` → Licensing.
 
 ## 5. Not verified
 
-- No USB/DA/Flash flow has been exercised end to end in this project — there is no
-  target device on USB here, and without a native core there is nothing to call.
-- The dispatch-id namespace of `nativeRunCommand` / `nativeRunGuiAction` is not
-  enumerated: the ids are owned by the core, and the Java call sites only pass them.
+- No USB/DA/Flash flow has been exercised end to end — there is no MTK target on USB on this
+  machine. The core builds and links for `aarch64-linux-android`, and its payload layer is
+  unit-tested, but no session has ever been opened against a device.
+- The dispatch-id namespace of `nativeRunCommand` / `nativeRunGuiAction` is not enumerated: the
+  ids are owned by the core, and the Java call sites only pass them. The reference engine ignores
+  them too, so this core does the same.
 - `nativeSetUsbFd`'s `long` return and `nativeSetXiaomiAuthGeneration`'s effect are
   typed from the Java declarations only.
+- The reference engine's `crash` resets the SoC; this core's only closes the transport (see
+  `docs/NATIVE-ENGINE-RE.md`, "What this core does not reproduce").
 
 ## 6. Result payload contract (established)
 
@@ -166,8 +174,12 @@ operands appear on the same path). Call sites pass two leading empty operands be
 meaningful ones — `nativeRunGuiAction(i, j, "pgpt", "", "", a, b, c)` — so a core must not
 assume operand 0 is the primary argument.
 
-Not established: the label set for the partition-table verb (`pgpt`) and for `upload`, and the
-error-message vocabulary callers may match on.
+The `pgpt` and per-verb label sets are now established from the reference engine's `.rodata`:
+`pgpt` emits `PARTITION TABLE` followed by `{name} addr=0x{addr:x} size=0x{size:x}
+section={section}` lines, and `upload`/`read-flash`, `download`/`write-flash`/`scatter-download`,
+`erase*`, `seccfg`, `bootctrl-set`, `reboot`, `shutdown`, `crash`, `scatter-download-v6` and
+`scatter-firmware-upgrade` each carry a fixed block — all recorded in `docs/NATIVE-ENGINE-RE.md`.
+Error messages are `ERR:<text>`; the ones the reference engine pins verbatim are listed there too.
 
 ## 7. Command surface the core implements
 
@@ -178,24 +190,28 @@ all six to JNI in that order; the GUI call sites (`x/vntpaom.java:94,226`, `x/hh
 `x/silhone.java:123`, `x/lpkdqgx.java:122`) use the same tail. `nativeConnectSession(mode, timeout,
 da, auth, preloader)` is the same shape without the verb and operands.
 
-| verb | core behaviour | status |
+| verb | core behaviour | payload |
 | --- | --- | --- |
-| `probe` | build session, handshake only, return the device-info block | implemented |
-| `pgpt` | partition table block | implemented |
-| `bootctrl-info` | boot-control block | implemented |
-| `bootctrl-set` | read `misc`/`para`, patch the active slot, write the partition back | implemented |
-| `upload` | read partition → file | implemented |
-| `read-flash` | raw flash read → file | implemented |
-| `download` | write image into the partition; a `name\t<hex offset>` operand takes the offset path | implemented |
-| `scatter-download` | as `download` (offset form) | implemented |
-| `write-flash` | write image to a partition | implemented |
-| `erase-partition` | erase one partition | implemented |
-| `seccfg` | `unlock` / `lock`; reading the state back is refused | partial |
-| `scatter-download-v6` | read the scatter/XML file, flash it, resolving images beside the scatter | implemented, untested |
-| `reboot` | `normal`/`fastboot`/`recovery`; an empty operand means normal | implemented |
-| `shutdown` | power off | implemented |
-| `crash` | close the session | implemented |
-| `scatter-firmware-upgrade` | — | not implemented; the answer is an explicit error |
+| `probe` | build session, handshake, return the device block | `SESSION READY` … `PARTITIONS:` |
+| `pgpt` | partition table | `PARTITION TABLE` + `addr=/size=/section=` lines |
+| `bootctrl-info` | boot-control block from `misc`/`para` | `BOOTCTRL` … `SLOT_B_VERITY:` |
+| `bootctrl-set` | read the block, patch the active slot, write it back, re-read to prove it | `BOOTCTRL UPDATED` |
+| `upload` | read partition → file | `READ COMPLETE` + `PARTITION/BYTES/FILE` |
+| `read-flash` | raw flash read → file | as `upload` |
+| `download` | write image into a partition; a `name\t<hex offset>` operand takes the raw-offset path | `WRITE COMPLETE` + `PARTITION/BYTES` |
+| `scatter-download` | as `download` (offset form) | as `download` |
+| `write-flash` | write image to a partition through the flash path | as `download` |
+| `erase-partition` | erase one partition | `ERASE COMPLETE` + `PARTITION/BYTES` |
+| `erase` | erase through the flash path | as `erase-partition` |
+| `seccfg` | `unlock` / `lock` only; any other action is refused verbatim | `SECCFG UPDATED` + `STATE` |
+| `reboot` | `normal`, `home-screen`, `fastboot`, `meta`, `test`; an empty operand means normal | `REBOOT COMPLETE` + `MODE` |
+| `shutdown` | power off | `SHUTDOWN COMPLETE` |
+| `crash` | drop the session; refused while a DA is live | `CRASH TRIGGERED` + `TARGET` |
+| `scatter-download-v6` | read the scatter, flash it, resolve images beside it | `DOWNLOAD ONLY COMPLETE` + `ENGINE/PARTITIONS` |
+| `scatter-firmware-upgrade` | protocol gate, flash the package, report the layout facts it measured | `FIRMWARE UPGRADE COMPLETE` … |
 
-Nothing above is verified against hardware: this device has no OTG target, so every USB/DA path is
-compile- and API-verified only.
+Nothing above is verified against hardware: this machine has no MTK target on USB, so every
+USB/DA path is compile-, API- and unit-verified only (`cargo test -p rynx-core`, six payload
+tests). The three known gaps against the reference engine — `crash` without a SoC primitive, the
+empty `HW VERSION`/`SW VERSION` values, and the reduced firmware-upgrade transaction — are listed
+with their reasons in `docs/NATIVE-ENGINE-RE.md`.

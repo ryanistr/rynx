@@ -35,26 +35,37 @@ variables from the NDK and builds for `aarch64-linux-android` with `API_LEVEL` (
 a device session on it — endpoint pair discovered from the configuration descriptor, DA /
 preloader / SLA payloads read from the operand paths, BROM/preloader handshake, and DA mode
 when a DA payload was supplied. `nativeRunCommand` and `nativeRunGuiAction` dispatch a
-command verb against the live session and answer `OK\n<payload>` or an error string.
+command verb against the live session and answer `OK\n<payload>` or `ERR:<message>`.
 
-Implemented verbs:
+The payload blocks are a contract with the app's screens, which read them back by label
+(`CHIP:`, `SLOT_COUNT:`, `addr=0x`…), so their text and line order are pinned to the reference
+engine's own templates — see `../docs/NATIVE-ENGINE-RE.md`.
+
+Implemented verbs — exactly the reference engine's namespace, no aliases of our own:
 
 | Verb | Operands | Action |
 | --- | --- | --- |
-| `device-info` | — | device info dump |
-| `partitions`, `pgpt`, `list-partitions` | — | partition table as JSON (`name`, `size`, `address`, `kind`) |
-| `bootctrl-info` | — | boot control state |
-| `read-partition` | name, path | read a partition to a file |
-| `write-partition` | name, path | write a file into a partition |
-| `erase-partition` | name | erase a partition |
-| `read-flash`, `write-flash`, `erase-flash` | name[, path] | same, through the flash path |
-| `read-efuses` | path | efuse dump to a file |
-| `read-register`, `write-register` | address[, value] | register access (hex operands) |
-| `reboot` | mode | `normal`, `home`, `fastboot`, `test`, `meta` |
-| `shutdown` | — | shut the device down |
+| `probe` | — | device block |
+| `pgpt` | — | partition table |
+| `bootctrl-info` | — | boot-control state |
+| `bootctrl-set` | slot (`a`/`b`) | patch the active slot, then verify the write back |
+| `upload` | partition, path | read a partition out to a file |
+| `read-flash` | partition, path | raw flash read to a file |
+| `download` | partition[`\t`offset], path | write an image into a partition |
+| `scatter-download` | partition[`\t`offset], path | as `download` |
+| `write-flash` | partition, path | write an image through the flash path |
+| `erase-partition` | partition | erase one partition |
+| `erase` | partition | erase through the flash path |
+| `seccfg` | `unlock` / `lock` | bootloader lock state |
+| `reboot` | `normal`, `home-screen`, `fastboot`, `meta`, `test` | reboot; empty means `normal` |
+| `shutdown` | — | power off |
+| `crash` | — | drop the session (refused while a DA is live) |
+| `scatter-download-v6` | scatter path | flash one XML/V6 package |
+| `scatter-firmware-upgrade` | scatter path | protocol gate + flash + layout report |
 
 Every other verb answers `ERR:unsupported command '<verb>'`, so a gap in coverage is
-visible in the UI instead of silently doing nothing.
+visible in the UI instead of silently doing nothing. The payload text of each verb, and the
+evidence it was read from, is in `../docs/NATIVE-ENGINE-RE.md`.
 
 ## Constraints worth knowing
 
@@ -69,6 +80,9 @@ visible in the UI instead of silently doing nothing.
 - **The fastboot verbs are not implemented.** `nativeUsbfsClaim/Read/Write/Release` are
   real; the seven `nativeFastboot*` entries answer
   `ERR:fastboot transport is not implemented in this build`.
+- **`crash` has no SoC primitive.** The linked engine exposes no crash command, so the verb
+  drops the transport instead of faulting the SoC; it keeps the reference engine's payload and
+  its DA-mode refusal. Rationale and the rest of the gap list: `../docs/NATIVE-ENGINE-RE.md`.
 
 ## Requirements
 
