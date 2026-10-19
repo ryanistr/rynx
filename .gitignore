@@ -1,6 +1,7 @@
 .gradle/
 build/
 */build/
+build-apk/
 native/target/
 app/src/main/jniLibs/
 local.properties

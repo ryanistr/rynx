@@ -86,6 +86,17 @@ were read from the declaring Java classes in `app/src/main/java`. A core built f
 this app must register the `com.rynx.app.*` paths; the paths baked into those
 artifacts predate this project's package name and are replaced at build time.
 
+The registration tables were then checked against the classes they target: `javap -s -p`
+over the compiled `MainActivity` and `AdbFastbootNative` yields 19 native methods, and all
+19 (name, descriptor) pairs appear in `native/core/src/lib.rs` (8) and
+`native/adbfastboot/src/lib.rs` (11) — no name on either side is unmatched and no descriptor
+differs from the compiled one. The reference split is the same shape: 8 names against
+`…MainActivity`, 11 against `…adbfastboot/AdbFastbootNative`, 2 against
+`…security/NativeAssetGate`, plus the `(Ljava/lang/String;)V` callback
+`onNativeFastbootEvent` on the last of those classes, which this repository also calls.
+`NativeAssetGate`'s two are the only methods in the app that no built library registers, and
+nothing invokes its entry point, so no call can reach it.
+
 ## 3. Native core — capability checklist
 
 Everything below is required by the ABI in section 2 and by the app's screen flows. The
@@ -130,8 +141,9 @@ The core is a Rust workspace library plus a thin JNI bridge:
    (`EncryptedNativeLoader` + `NativeAssetGate`) is optional and only exists to keep
    an engine out of plain sight; a core built from source does not need it.
 
-Steps 1–4 are done and committed; `native/README.md` describes the resulting layout. For the
-desktop targets, see `docs/PLATFORMS.md`.
+Steps 1–4 are done and committed; `native/README.md` describes the resulting layout. The APK itself
+is produced by `tools/build-apk.sh`, which needs only the SDK tools — see the Build section of
+`README.md`. For the desktop targets, see `docs/PLATFORMS.md`.
 
 Licensing note: the engine crates are AGPL-3.0-or-later. Linking them makes the
 combined work AGPL-3.0-or-later; the repository licence has to be settled before the
@@ -145,7 +157,14 @@ core is added. See `README.md` → Licensing.
   fastboot conversation in `librynx_adbfastboot.so`: its framing, sparse splitting and interface
   walk are unit-tested against the wire format, and no target has ever answered it.
 - What *is* verified on hardware: the app installs, launches and keeps running with both libraries
-  mapped into its address space, and the screens that read the payload labels render.
+  mapped into its address space, and the screens that read the payload labels render. The last
+  build checked this way was `tools/build-apk.sh`'s output, APK
+  `md5 6b9701ea444a5c8baffd743ccd8f1fd3`, on the X6739 test device: `adb install -r` reported
+  success, `am start -W` reported `TotalTime: 3398`, `pidof` gave a live process, and
+  `/proc/<pid>/maps` showed both `lib/arm64/librynx_core.so` and `lib/arm64/librynx_adbfastboot.so`
+  from that APK. Nothing in the run called a native method — the terminal screen is the app's own
+  non-root legacy console, and every entry point needs an open USB descriptor — so registration is
+  proven statically (section 2), not by a call.
 - Linux and Windows are not built at all — see `docs/PLATFORMS.md` for what each target needs and
   which layers are already platform-independent.
 - The dispatch-id namespace of `nativeRunCommand` / `nativeRunGuiAction` is not enumerated: the
