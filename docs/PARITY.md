@@ -256,3 +256,51 @@ tests). The two remaining gaps against the reference engine — the empty `HW VE
 values (the engine crate reads those two numbers and discards them; `core/src/device.rs:228`) and
 the reduced firmware-upgrade transaction — are listed with their reasons in
 `docs/NATIVE-ENGINE-RE.md`.
+
+## 8. Structural audit against the reference build
+
+Run 2026-10-19 on the shipped bytes of both APKs: `apkanalyzer manifest print` and
+`aapt2 dump badging` for declarations, REA `decode_android_resources` (`include_strings: true`,
+locales `default` and `in`) for the string tables, `baksmali list classes|methods|fields` for the
+code. Reference artifact: `raffprjkt-4.1-stable-arm64-release.apk` (arm64-v8a, release,
+R8-minified). Rynx side: `build-apk/rynx-debug.apk`, md5 `294b0623c90a42e3ac60554bdcc26595`.
+
+| surface | reference | rynx | result |
+| --- | --- | --- | --- |
+| string keys | 1092 en / 1092 in | 1092 / 1092 | identical key sets, both locales |
+| string values | — | — | 114 differ: product names, the `/sdcard/rynx` backup path, credit lines, and `&`-escaping artifacts. No functional text differs |
+| manifest | `INTERNET`, `MANAGE_EXTERNAL_STORAGE`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`; `android.hardware.usb.host` required; one launcher activity; no service, receiver or provider | same | identical |
+| defined classes | 229 | 503 | 156 identical names, 69 renamed with an identical `(name, argc, return)` method profile, 4 method-less classes present by name; **0 missing** |
+| defined methods | 1105 | 1813 | superset |
+| defined fields | 1142 | 3700 | superset |
+
+The 343 rynx-only class names are all nested (`$…`), `R`/`R$` or `BuildConfig` entries; the audit
+found no unexplained top-level class. The 69 ref-only names each have a class in rynx carrying the
+same method multiset, which is expected after the R8 → decompile → javac round trip reshapes
+anonymous classes.
+
+Two defects the audit caught, both fixed in the same commit:
+
+* `x/iivesaq.java` fetched `https://api.github.com/repos/OWNER/rynx/releases/latest` — a
+  placeholder owner, so "Check for updates" could only ever fail. It now reads
+  `repos/ryanistr/rynx/releases/latest`. That path answers 200 for the repository and 404 for
+  `releases/latest` while no release exists — the branch that shows `R.string.update_check_failed`
+  (`x/eigllth.java:101`) rather than crashing.
+* The About screen's two link rows pointed at `example.com` stubs. They now point at the project
+  (`https://github.com/ryanistr/rynx`) and its releases page, and the row labels read PROJECT and
+  RELEASES instead of TELEGRAM and DONATE.
+
+The update checker fixes the release convention for this repository: a published release's notes
+must carry `RYNX_VERSION_CODE = <n>` and `RYNX_VERSION_NAME = <x.y.z>`, or the checker reports
+"could not check for updates" by design.
+
+Not verified in this pass: the About screen was not walked on-device. The device was released by
+another session at 23:48 WIB and an attestation pass was using its screen. The change is
+resource-verified — `resources.arsc` carries both new URLs and `classes.dex` carries the new API
+URL — and the endpoint behaviour was checked against GitHub directly.
+
+The §5 native gaps stand: this audit covers the app half only. The core's verb literals could not
+be re-confirmed by a Ghidra defined-string search for `bootctrl-set`, `read-flash` or `nativeRun`
+(all empty), because Rust packs them into one `&str` table; those empty results are bounded by the
+string inventory, not evidence of absence — §7 and `docs/NATIVE-ENGINE-RE.md` hold the disassembly
+evidence that established the pool.

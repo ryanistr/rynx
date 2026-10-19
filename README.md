@@ -85,8 +85,10 @@ with `RYNX_KEYSTORE` if set, otherwise `~/.android/debug.keystore`.
   session and command layers are already transport-agnostic. [docs/PLATFORMS.md](docs/PLATFORMS.md)
   records what each target needs and which parts are already platform-independent.
 * Replace the placeholder UI with a designed one.
-* Fill in the project links — the update feed and the community/donate links are placeholders
-  (`res/values/strings.xml`, `res/values-in/strings.xml`, `x/iivesaq.java`).
+* Publish a release. The in-app update checker reads
+  `https://api.github.com/repos/ryanistr/rynx/releases/latest`, so a release's notes must contain
+  `RYNX_VERSION_CODE = <n>` and `RYNX_VERSION_NAME = <x.y.z>`, and its assets should include the
+  APK to offer as the download. Until then the checker reports "could not check for updates".
 
 ## Credits
 

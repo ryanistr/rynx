@@ -23,7 +23,7 @@ public abstract class iivesaq {
 
     public static ziuhthw nmpwovh() throws ProtocolException, IOException, JSONException {
         String strOptString;
-        HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("https://api.github.com/repos/OWNER/rynx/releases/latest").openConnection();
+        HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("https://api.github.com/repos/ryanistr/rynx/releases/latest").openConnection();
         httpURLConnection.setRequestMethod("GET");
         httpURLConnection.setConnectTimeout(7000);
         httpURLConnection.setReadTimeout(10000);
