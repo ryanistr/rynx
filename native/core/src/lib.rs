@@ -41,11 +41,14 @@ use penumbra_mtk::port::ConnectionType;
 use penumbra_mtk::{BootMode, Error, MtkPort, Partition, PlProtocol};
 use usbfs::{EP_IN_DEFAULT, EP_OUT_DEFAULT, Endpoints, UsbfsPort};
 
+mod port_recorder;
+use port_recorder::{HwSwVersion, RecordingPort};
+
 /// The transport the session is built on: an open USB file descriptor plus `usbfs` ioctls, which is
 /// what Android hands the app. This is the single swap point for another platform — a desktop build
 /// points the alias at a transport that owns the device handle (or at one of the engine's own
 /// backends) and everything above it, session and dispatch included, is unchanged.
-pub type Port = UsbfsPort;
+pub type Port = RecordingPort<UsbfsPort>;
 
 const SESSION_TIMEOUT: Duration = Duration::from_millis(5000);
 
@@ -58,6 +61,8 @@ const BOOTCONTROL_SLOT_COUNT_MASK: u16 = 0x7;
 
 struct Session {
     dev: Device<'static, Port>,
+    /// HW/SW version the preloader reported, which the engine reads and discards.
+    version: Option<HwSwVersion>,
     /// Descriptor and payload paths this session was built from. Each command carries its own copy,
     /// so a mismatch means the app switched device or DA and the old session must be dropped.
     key: (RawFd, String, String, String),
@@ -144,8 +149,21 @@ fn partition_line(partition: &Partition, storage: &'static str) -> String {
     )
 }
 
+/// The two version lines the info panel reads. `version` is what the port wrapper caught during
+/// `init()`; the engine drops the numbers, so a device that never answered leaves them empty.
+fn version_lines(version: Option<HwSwVersion>) -> String {
+    let (hw, sw) = match version {
+        Some(version) => (version.hw.to_string(), version.sw.to_string()),
+        None => (String::new(), String::new()),
+    };
+    format!("HW VERSION: {hw}\nSW VERSION: {sw}\n")
+}
+
 /// `probe` payload: the device block the app's info panel reads label by label.
-fn device_info_payload(dev: &mut Device<'static, Port>) -> Result<String, String> {
+fn device_info_payload(
+    dev: &mut Device<'static, Port>,
+    version: Option<HwSwVersion>,
+) -> Result<String, String> {
     let sbc = dev.devinfo().sbc_enabled();
     let sla = dev.devinfo().sla_enabled();
     let daa = dev.devinfo().daa_enabled();
@@ -164,9 +182,9 @@ fn device_info_payload(dev: &mut Device<'static, Port>) -> Result<String, String
     out.push_str(&format!("DA PROTOCOL: {protocol}\n"));
     out.push_str(&format!("HW CODE: 0x{:04x}\n", data.hw_code));
     out.push_str(&format!("HW SUBCODE: {}\n", data.hw_subcode));
-    // The engine carries neither field, so both labels are present with an empty value.
-    out.push_str("HW VERSION: \n");
-    out.push_str("SW VERSION: \n");
+    // The engine drops both numbers, so they come off the wire from the port wrapper; a device that
+    // never answered the request leaves the labels empty.
+    out.push_str(&version_lines(version));
     out.push_str(&format!("TARGET CONFIG: 0x{:08x}\n", data.target_config));
     out.push_str(&format!("MEID: {}\n", hex_bytes(&data.meid)));
     out.push_str(&format!("SOC ID: {}\n", hex_bytes(&data.soc_id)));
@@ -334,7 +352,7 @@ fn build_session(
         ep_in: EP_IN_DEFAULT,
         ep_out: EP_OUT_DEFAULT,
     });
-    let mut port = UsbfsPort::with_endpoints(fd, connection, endpoints);
+    let mut port = RecordingPort::new(UsbfsPort::with_endpoints(fd, connection, endpoints));
     port.set_timeout(SESSION_TIMEOUT).map_err(describe)?;
 
     let da = load_payload(da_path)?;
@@ -354,11 +372,13 @@ fn build_session(
 
     let mut dev = builder.build().map_err(describe)?;
     dev.init().map_err(describe)?;
+    let version = dev.port().version();
     if want_da && da.is_some() {
         dev.ensure_da_mode().map_err(describe)?;
     }
     Ok(Session {
         dev,
+        version,
         key: (
             fd,
             da_path.to_string(),
@@ -423,7 +443,7 @@ fn dispatch(session: &mut Session, verb: &str, operands: &[String]) -> Result<St
     };
 
     match verb {
-        "probe" => device_info_payload(&mut session.dev),
+        "probe" => device_info_payload(&mut session.dev, session.version),
         "pgpt" => Ok(partition_table_payload(&mut session.dev)),
         "bootctrl-info" => {
             let (partition, buffer, control) = read_bootctrl(session)?;
@@ -1003,6 +1023,17 @@ mod tests {
             partition_line(&partition, "EMMC"),
             "boot_a addr=0x8000 size=0x20000000 section=EMMC-BOOT1\n"
         );
+    }
+
+    #[test]
+    fn version_lines_keep_their_labels_when_the_device_never_answered() {
+        assert_eq!(
+            version_lines(Some(HwSwVersion { subcode: 0xCA, hw: 4, sw: 42 })),
+            "HW VERSION: 4\nSW VERSION: 42\n"
+        );
+        // The info panel looks these labels up by name, so an unknown version keeps both empty
+        // rather than dropping the lines.
+        assert_eq!(version_lines(None), "HW VERSION: \nSW VERSION: \n");
     }
 
     #[test]

@@ -199,7 +199,7 @@ Labels the app reads from a device-info payload (all from one call site in `Main
 | `BOOT MODE:` | connection / boot mode |
 | `DA PROTOCOL:` | XML or XFlash |
 | `HW CODE:`, `HW SUBCODE:` | hardware code and subcode |
-| `HW VERSION:`, `SW VERSION:` | versions — no source for these was located |
+| `HW VERSION:`, `SW VERSION:` | versions, read off the preloader reply by the transport wrapper (`native/core/src/port_recorder.rs`) |
 | `TARGET CONFIG:` | target config word |
 | `MEID:` | MEID |
 | `SOC ID:` | SoC ID |
@@ -251,10 +251,11 @@ da, auth, preloader)` is the same shape without the verb and operands.
 | `scatter-firmware-upgrade` | protocol gate, flash the package, report the layout facts it measured | `FIRMWARE UPGRADE COMPLETE` … |
 
 Nothing above is verified against hardware: this machine has no MTK target on USB, so every
-USB/DA path is compile-, API- and unit-verified only (`cargo test -p rynx-core`, six payload
-tests). The two remaining gaps against the reference engine — the empty `HW VERSION`/`SW VERSION`
-values (the engine crate reads those two numbers and discards them; `core/src/device.rs:228`) and
-the reduced firmware-upgrade transaction — are listed with their reasons in
+USB/DA path is compile-, API- and unit-verified only (`cargo +nightly test -p rynx-core`, ten
+tests, three of them driving the engine's own `PlProtocol::get_hw_sw_ver` through the port
+wrapper). `HW VERSION`/`SW VERSION` are no longer a gap: the wrapper watches the version reply as
+it passes (`native/core/src/port_recorder.rs`) instead of waiting for an engine change. One gap
+remains — the reduced firmware-upgrade transaction — listed with its reason in
 `docs/NATIVE-ENGINE-RE.md`.
 
 ## 8. Structural audit against the reference build
@@ -315,7 +316,9 @@ another session at 23:48 WIB and an attestation pass was using its screen. The c
 resource-verified — `resources.arsc` carries both new URLs and `classes.dex` carries the new API
 URL — and the endpoint behaviour was checked against GitHub directly.
 
-The §5 native gaps stand: this audit covers the app half only. The core's verb literals could not
+The §5 native gap stands: this audit covers the app half only. `HW VERSION`/`SW VERSION` were
+closed in the core afterwards (`native/core/src/port_recorder.rs`), leaving the reduced
+firmware-upgrade transaction. The core's verb literals could not
 be re-confirmed by a Ghidra defined-string search for `bootctrl-set`, `read-flash` or `nativeRun`
 (all empty), because Rust packs them into one `&str` table; those empty results are bounded by the
 string inventory, not evidence of absence — §7 and `docs/NATIVE-ENGINE-RE.md` hold the disassembly

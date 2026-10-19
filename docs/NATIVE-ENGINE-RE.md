@@ -217,14 +217,19 @@ Honest gaps, not oversights:
   Android the descriptor belongs to the app, the assertion destroys it, and `UsbfsPort::reenumerate`
   is a no-op by design (`native/usbfs/src/lib.rs:254`); the app re-attaches the device and hands over
   a fresh descriptor, which is the same end state by a different route.
-* **`HW VERSION` / `SW VERSION` are emitted empty.** Those values come from the reference
-  engine's own device-info struct; the linked engine's `DevInfoData` has no such fields, so the
-  labels are present (the app reads them) with no value rather than a fabricated one. Precisely:
-  `penumbra-mtk` `core/src/device.rs:228` reads them (`let (hw_subcode, ..) = pl.get_hw_sw_ver()?;`)
-  and discards the two version numbers on the spot, and `core/src/devinfo.rs:20-29` has no field to
-  keep them in. Closing this needs a change in the engine crate — keep the pair in `DevInfoData` —
-  not in this core; the preloader command that returns them exists (`Command::GetHwSwVer = 0xFC`,
-  `core/src/preloader/cmd.rs:61`), so the data is on the wire already.
+* **`HW VERSION` / `SW VERSION` come off the wire, not from the engine.** The linked engine reads
+  the pair and throws it away: `penumbra-mtk` `core/src/device.rs:228` runs
+  `let (hw_subcode, ..) = pl.get_hw_sw_ver()?;` and `core/src/devinfo.rs:20-29` has no field to keep
+  the numbers in, so nothing downstream can ask for them. Rather than patch the crate, the transport
+  is wrapped: `native/core/src/port_recorder.rs` is an `MtkPort` decorator that forwards every call
+  unchanged and only *watches* the one exchange that carries the answer — after `0xFC`
+  (`Command::GetHwSwVer`, `core/src/preloader/cmd.rs:61`) goes out, the reply is the echo, then
+  `hw_subcode`, `hw_version`, `sw_version` as big-endian u16s, then the status word. Watching adds no
+  traffic and cannot change the exchange; any byte that breaks the pattern ends the scan, so an
+  unanswered request leaves the labels empty instead of wrong. `Port` is
+  `RecordingPort<UsbfsPort>`, and `build_session` snapshots the triple after `dev.init()`. Tests drive
+  the engine's real `PlProtocol::get_hw_sw_ver` against a scripted device, plus the short-reply and
+  unrelated-traffic cases (`native/core/src/port_recorder.rs`, tests).
 * **Firmware-upgrade internals are reduced.** The reference engine runs a full transactional
   FWUP: immutable plan v2, protected-data record files, seccfg preservation and recovery,
   auto-relock policy, native backup bookkeeping, layout-migration detection. This core runs one
