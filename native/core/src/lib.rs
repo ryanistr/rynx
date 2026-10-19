@@ -41,6 +41,12 @@ use penumbra_mtk::port::ConnectionType;
 use penumbra_mtk::{BootMode, Error, MtkPort, Partition};
 use usbfs::{EP_IN_DEFAULT, EP_OUT_DEFAULT, Endpoints, UsbfsPort};
 
+/// The transport the session is built on: an open USB file descriptor plus `usbfs` ioctls, which is
+/// what Android hands the app. This is the single swap point for another platform — a desktop build
+/// points the alias at a transport that owns the device handle (or at one of the engine's own
+/// backends) and everything above it, session and dispatch included, is unchanged.
+pub type Port = UsbfsPort;
+
 const SESSION_TIMEOUT: Duration = Duration::from_millis(5000);
 
 /// Size of the boot-control block as it sits on the wire, from `hacc::BootControl`.
@@ -51,7 +57,7 @@ const BOOTCONTROL_INFO_OFFSET: usize = OFFSET_SLOT_SUFFIX + 9;
 const BOOTCONTROL_SLOT_COUNT_MASK: u16 = 0x7;
 
 struct Session {
-    dev: Device<'static, UsbfsPort>,
+    dev: Device<'static, Port>,
     /// Descriptor and payload paths this session was built from. Each command carries its own copy,
     /// so a mismatch means the app switched device or DA and the old session must be dropped.
     key: (RawFd, String, String, String),
@@ -101,7 +107,7 @@ fn boot_mode_label(connection: ConnectionType) -> &'static str {
 }
 
 /// DA protocol as the app's `DA PROTOCOL:` line spells it.
-fn protocol_label(dev: &mut Device<'static, UsbfsPort>) -> &'static str {
+fn protocol_label(dev: &mut Device<'static, Port>) -> &'static str {
     match dev.get_protocol() {
         Some(DaProtocol::V5(_)) => "XFlash (V5)",
         Some(DaProtocol::V6(_)) => "XML (V6)",
@@ -110,7 +116,7 @@ fn protocol_label(dev: &mut Device<'static, UsbfsPort>) -> &'static str {
 }
 
 /// Storage kind as the partition table's `section=` and the `STORAGE:` line spell it.
-fn storage_label(dev: &mut Device<'static, UsbfsPort>) -> &'static str {
+fn storage_label(dev: &mut Device<'static, Port>) -> &'static str {
     match dev.get_storage() {
         Some(penumbra_mtk::StorageKind::Emmc(_)) => "EMMC",
         Some(penumbra_mtk::StorageKind::Ufs(_)) => "UFS",
@@ -118,7 +124,7 @@ fn storage_label(dev: &mut Device<'static, UsbfsPort>) -> &'static str {
     }
 }
 
-fn chip_label(dev: &mut Device<'static, UsbfsPort>) -> String {
+fn chip_label(dev: &mut Device<'static, Port>) -> String {
     match dev.devinfo().chip() {
         Some(soc) => match soc.marketing_name() {
             Some(marketing) => format!("{soc:?}/{marketing}"),
@@ -139,7 +145,7 @@ fn partition_line(partition: &Partition, storage: &'static str) -> String {
 }
 
 /// `probe` payload: the device block the app's info panel reads label by label.
-fn device_info_payload(dev: &mut Device<'static, UsbfsPort>) -> Result<String, String> {
+fn device_info_payload(dev: &mut Device<'static, Port>) -> Result<String, String> {
     let sbc = dev.devinfo().sbc_enabled();
     let sla = dev.devinfo().sla_enabled();
     let daa = dev.devinfo().daa_enabled();
@@ -172,7 +178,7 @@ fn device_info_payload(dev: &mut Device<'static, UsbfsPort>) -> Result<String, S
 }
 
 /// `pgpt` payload: a header line then one parsable line per partition.
-fn partition_table_payload(dev: &mut Device<'static, UsbfsPort>) -> String {
+fn partition_table_payload(dev: &mut Device<'static, Port>) -> String {
     let storage = storage_label(dev);
     let partitions = dev.partitions();
     let mut out = String::from("PARTITION TABLE\n");
@@ -280,7 +286,7 @@ fn scatter_image_count(scatter: &ScatterFile) -> usize {
         .count()
 }
 
-fn partition_signature(dev: &mut Device<'static, UsbfsPort>) -> Vec<(String, u64, u64)> {
+fn partition_signature(dev: &mut Device<'static, Port>) -> Vec<(String, u64, u64)> {
     dev.partitions()
         .into_iter()
         .map(|partition| (partition.name, partition.address, partition.size))
