@@ -9,7 +9,7 @@ use std::os::fd::RawFd;
 
 use jni::JNIEnv;
 use jni::objects::{JByteArray, JClass, JString};
-use jni::sys::{JNIEnv as RawJniEnv, JNI_VERSION_1_6, JavaVM, jboolean, jint, jsize, jstring};
+use jni::sys::{JNI_VERSION_1_6, JavaVM, jboolean, jint, jsize, jstring};
 
 mod ioc {
     pub const BULK: u64 = 0xc018_5502; // _IOWR('U', 2, struct usbdevfs_bulktransfer)
@@ -196,7 +196,12 @@ extern "system" fn fastboot_triple(
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn JNI_OnLoad(vm: *mut JavaVM, _reserved: *mut c_void) -> jint {
-    let mut env = match unsafe { JNIEnv::from_raw(vm.cast::<RawJniEnv>()) } {
+    // JNI_OnLoad receives the JavaVM, not a JNIEnv: the environment has to be fetched from it.
+    let jvm = match unsafe { jni::JavaVM::from_raw(vm) } {
+        Ok(jvm) => jvm,
+        Err(_) => return JNI_VERSION_1_6,
+    };
+    let mut env = match jvm.get_env() {
         Ok(env) => env,
         Err(_) => return JNI_VERSION_1_6,
     };
@@ -241,13 +246,13 @@ pub unsafe extern "system" fn JNI_OnLoad(vm: *mut JavaVM, _reserved: *mut c_void
             fastboot_snapshot as *mut c_void,
         ),
         ("nativeUsbfsClaim", "(III)I", usbfs_claim as *mut c_void),
-        ("nativeUsbfsRead", "(II[BII)I", usbfs_read as *mut c_void),
+        ("nativeUsbfsRead", "(II[BIII)I", usbfs_read as *mut c_void),
         (
             "nativeUsbfsRelease",
             "(II)V",
             usbfs_release as *mut c_void,
         ),
-        ("nativeUsbfsWrite", "(II[BII)I", usbfs_write as *mut c_void),
+        ("nativeUsbfsWrite", "(II[BIII)I", usbfs_write as *mut c_void),
     ];
     let native_methods: Vec<jni::NativeMethod> = methods
         .iter()
