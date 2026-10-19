@@ -144,6 +144,16 @@ public final class EncryptedNativeLoader {
         }
     }
 
+    /** Loads a native component that ships as a plain library inside the APK. */
+    public static synchronized void nmpwovh(String str) {
+        HashSet hashSet = nmpwovh;
+        if (hashSet.contains(str)) {
+            return;
+        }
+        System.loadLibrary(str);
+        hashSet.add(str);
+    }
+
     public static String ojyssqt(byte[] bArr) throws NoSuchAlgorithmException {
         byte[] bArrDigest = MessageDigest.getInstance("SHA-256").digest(bArr);
         StringBuilder sb = new StringBuilder(24);

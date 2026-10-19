@@ -132,6 +132,7 @@ public abstract class zamkzqg {
                 }
             } catch (Throwable th4) {
                 thAlias = th4;
+                throw thAlias;
             }
         } catch (IOException e2) {
             throw new czgynww("INVALID_ENDPOINT", 0, "Authorization server URL is invalid.", e2);
@@ -471,10 +472,14 @@ public abstract class zamkzqg {
     }
 
     public static yztlqms eqqqfvj(String str, xhyvkax xhyvkaxVar, String str2, String str3, String str4) {
-        JSONObject jSONObjectJofyvuh = jofyvuh(str, xhyvkaxVar, mdepcqh("xiaomi_quote", str2, str3, str4));
-        int iOptInt = jSONObjectJofyvuh.optInt("balance", -1);
-        int iOptInt2 = jSONObjectJofyvuh.optInt("held", 0);
-        return new yztlqms(jSONObjectJofyvuh.optString("mode", str4), jSONObjectJofyvuh.optString("chipset", str3), jSONObjectJofyvuh.optInt("cost", -1), iOptInt, iOptInt2, jSONObjectJofyvuh.optInt("available", iOptInt >= 0 ? Math.max(0, iOptInt - iOptInt2) : -1));
+        try {
+            JSONObject jSONObjectJofyvuh = jofyvuh(str, xhyvkaxVar, mdepcqh("xiaomi_quote", str2, str3, str4));
+            int iOptInt = jSONObjectJofyvuh.optInt("balance", -1);
+            int iOptInt2 = jSONObjectJofyvuh.optInt("held", 0);
+            return new yztlqms(jSONObjectJofyvuh.optString("mode", str4), jSONObjectJofyvuh.optString("chipset", str3), jSONObjectJofyvuh.optInt("cost", -1), iOptInt, iOptInt2, jSONObjectJofyvuh.optInt("available", iOptInt >= 0 ? Math.max(0, iOptInt - iOptInt2) : -1));
+        } catch (Throwable th) {
+            return sneakyThrow(th);
+        }
     }
 
     public static LinearLayout.LayoutParams exhiehf(Activity activity, boolean z) {
@@ -723,6 +728,19 @@ public abstract class zamkzqg {
         return textViewOxoagud;
     }
 
+    /** The broker helper declares Throwable; every failure it raises is a broker error. */
+    private static JSONObject araemokChecked(String str, String str2, JSONObject jSONObject, int i, int i2) throws czgynww {
+        try {
+            return araemok(str, str2, jSONObject, i, i2);
+        } catch (czgynww e) {
+            throw e;
+        } catch (Exception e) {
+            throw new czgynww("BROKER_ERROR", 0, "Authorization request failed.", e);
+        } catch (Throwable th) {
+            throw new czgynww("BROKER_ERROR", 0, "Authorization request failed.", null);
+        }
+    }
+
     public static xhyvkax iilntfn(String str, xhyvkax xhyvkaxVar, int i, int i2) throws czgynww {
         if (xhyvkaxVar == null || xhyvkaxVar.vivhedu.isEmpty()) {
             throw new czgynww("AUTH_REQUIRED", 401, "Account session is not available.", null);
@@ -730,7 +748,7 @@ public abstract class zamkzqg {
         JSONObject jSONObject = new JSONObject();
         zzqmpyp(jSONObject, "action", "account_refresh");
         zzqmpyp(jSONObject, "refresh_token", xhyvkaxVar.vivhedu);
-        return hiygjel(araemok(str, "", jSONObject, i, i2), xhyvkaxVar.qxvquar != null ? (String) xhyvkaxVar.qxvquar.ojyssqt : "");
+        return hiygjel(araemokChecked(str, "", jSONObject, i, i2), xhyvkaxVar.qxvquar != null ? (String) xhyvkaxVar.qxvquar.ojyssqt : "");
     }
 
     public static void ijakhcl(Activity activity, TextView textView, boolean z) {
@@ -834,7 +852,16 @@ public abstract class zamkzqg {
         return context.getSharedPreferences("rynx_ui", 0).getBoolean("ambient_halo", true);
     }
 
-    public static JSONObject jofyvuh(String str, xhyvkax xhyvkaxVar, JSONObject jSONObject) {
+    /**
+     * Rethrows without declaring: the dex has no checked-exception contract, so a failure that
+     * gets here must reach the same handler it reached before this source was reconstructed.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T, E extends Throwable> T sneakyThrow(Throwable th) throws E {
+        throw (E) th;
+    }
+
+    public static JSONObject jofyvuh(String str, xhyvkax xhyvkaxVar, JSONObject jSONObject) throws czgynww, IOException {
         return yjvhftf(str, xhyvkaxVar, jSONObject, 10000, 30000);
     }
 
@@ -1342,6 +1369,7 @@ public abstract class zamkzqg {
             return null;
         } catch (Throwable unused2) {
             cursorQuery = null;
+            return null;
         }
     }
 
@@ -1542,12 +1570,16 @@ public abstract class zamkzqg {
     }
 
     public static ghkjjru saksmfq(String str, xhyvkax xhyvkaxVar) {
-        JSONObject jSONObject = new JSONObject();
-        zzqmpyp(jSONObject, "action", "credit_balance");
-        JSONObject jSONObjectJofyvuh = jofyvuh(str, xhyvkaxVar, jSONObject);
-        int iOptInt = jSONObjectJofyvuh.optInt("available", jSONObjectJofyvuh.optInt("credit", jSONObjectJofyvuh.optInt("balance", 0)));
-        ghkjjru ghkjjruVar = xhyvkaxVar.qxvquar;
-        return new ghkjjru(ghkjjruVar == null ? "" : (String) ghkjjruVar.nmpwovh, ghkjjruVar != null ? (String) ghkjjruVar.ojyssqt : "", ghkjjruVar == null ? "user" : (String) ghkjjruVar.vivhedu, String.valueOf(iOptInt));
+        try {
+            JSONObject jSONObject = new JSONObject();
+            zzqmpyp(jSONObject, "action", "credit_balance");
+            JSONObject jSONObjectJofyvuh = jofyvuh(str, xhyvkaxVar, jSONObject);
+            int iOptInt = jSONObjectJofyvuh.optInt("available", jSONObjectJofyvuh.optInt("credit", jSONObjectJofyvuh.optInt("balance", 0)));
+            ghkjjru ghkjjruVar = xhyvkaxVar.qxvquar;
+            return new ghkjjru(ghkjjruVar == null ? "" : (String) ghkjjruVar.nmpwovh, ghkjjruVar != null ? (String) ghkjjruVar.ojyssqt : "", ghkjjruVar == null ? "user" : (String) ghkjjruVar.vivhedu, String.valueOf(iOptInt));
+        } catch (Throwable th) {
+            return sneakyThrow(th);
+        }
     }
 
     public static void sdchfks(Activity activity, Switch r5) {
@@ -1620,7 +1652,7 @@ public abstract class zamkzqg {
         zzqmpyp(jSONObject, "action", "account_login");
         zzqmpyp(jSONObject, "email", lowerCase);
         zzqmpyp(jSONObject, "password", str3);
-        return hiygjel(araemok(str, "", jSONObject, 10000, 30000), lowerCase);
+        return hiygjel(araemokChecked(str, "", jSONObject, 10000, 30000), lowerCase);
     }
 
     public static int thbdbid(Context context, String str, String str2, int i, int i2) {
@@ -1777,7 +1809,11 @@ public abstract class zamkzqg {
         zzqmpyp(jSONObject, "response_sha256", str3);
         zzqmpyp(jSONObject, "device_outcome", z ? "accepted" : "rejected");
         zzqmpyp(jSONObject, "device_status_code", Integer.valueOf(i));
-        jofyvuh(str, xhyvkaxVar, jSONObject);
+        try {
+            jofyvuh(str, xhyvkaxVar, jSONObject);
+        } catch (Throwable th) {
+            sneakyThrow(th);
+        }
     }
 
     /* JADX WARN: Code duplicated, block: B:12:0x02d2  */
@@ -2093,14 +2129,14 @@ public abstract class zamkzqg {
         zegwdrn(str, xhyvkaxVar, false, jMax, i, i2);
         int[] iArrChwohho = chwohho(jMax, i, i2);
         try {
-            return araemok(str, xhyvkaxVar.ojyssqt, jSONObject, iArrChwohho[0], iArrChwohho[1]);
+            return araemokChecked(str, xhyvkaxVar.ojyssqt, jSONObject, iArrChwohho[0], iArrChwohho[1]);
         } catch (czgynww e) {
             if (e.ojyssqt != 401 || xhyvkaxVar.vivhedu.isEmpty()) {
                 throw e;
             }
             zegwdrn(str, xhyvkaxVar, true, jMax, i, i2);
             int[] iArrChwohho2 = chwohho(jMax, i, i2);
-            return araemok(str, xhyvkaxVar.ojyssqt, jSONObject, iArrChwohho2[0], iArrChwohho2[1]);
+            return araemokChecked(str, xhyvkaxVar.ojyssqt, jSONObject, iArrChwohho2[0], iArrChwohho2[1]);
         }
     }
 
@@ -2157,7 +2193,12 @@ public abstract class zamkzqg {
     public static hiofinr yxcmoyp(String str, xhyvkax xhyvkaxVar, String str2, String str3, String str4, int i) throws czgynww {
         JSONObject jSONObjectMdepcqh = mdepcqh("xiaomi_prepare", str2, str3, str4);
         zzqmpyp(jSONObjectMdepcqh, "expected_cost", Integer.valueOf(i));
-        JSONObject jSONObjectJofyvuh = jofyvuh(str, xhyvkaxVar, jSONObjectMdepcqh);
+        JSONObject jSONObjectJofyvuh;
+        try {
+            jSONObjectJofyvuh = jofyvuh(str, xhyvkaxVar, jSONObjectMdepcqh);
+        } catch (IOException e) {
+            throw new czgynww("BROKER_ERROR", 0, "Authorization request failed.", e);
+        }
         String strOptString = jSONObjectJofyvuh.optString("attempt_id", "");
         if (strOptString.isEmpty()) {
             throw new czgynww("INVALID_RESPONSE", 0, "Authorization server did not return an attempt id.", null);
@@ -2167,7 +2208,7 @@ public abstract class zamkzqg {
         return new hiofinr(strOptString, jSONObjectJofyvuh.optString("mode", str4), jSONObjectJofyvuh.optString("chipset", str3), jSONObjectJofyvuh.optInt("cost", i), iOptInt, iOptInt2, jSONObjectJofyvuh.optInt("available", iOptInt >= 0 ? Math.max(0, iOptInt - iOptInt2) : -1), jSONObjectJofyvuh.optLong("expires_at_epoch", 0L));
     }
 
-    public static void zegwdrn(String str, xhyvkax xhyvkaxVar, boolean z, long j, int i, int i2) {
+    public static void zegwdrn(String str, xhyvkax xhyvkaxVar, boolean z, long j, int i, int i2) throws czgynww {
         if (z || xhyvkax.nmpwovh(xhyvkaxVar)) {
             synchronized (xhyvkaxVar) {
                 if (!z) {
@@ -2179,7 +2220,12 @@ public abstract class zamkzqg {
                         throw th;
                     }
                 }
-                int[] iArrChwohho = chwohho(j, i, i2);
+                int[] iArrChwohho;
+                try {
+                    iArrChwohho = chwohho(j, i, i2);
+                } catch (IOException e) {
+                    throw new czgynww("BROKER_ERROR", 0, "Authorization request failed.", e);
+                }
                 xhyvkax.ojyssqt(xhyvkaxVar, iilntfn(str, xhyvkaxVar, iArrChwohho[0], iArrChwohho[1]));
             }
         }

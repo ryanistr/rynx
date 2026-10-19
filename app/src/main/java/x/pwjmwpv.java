@@ -38,7 +38,7 @@ public abstract class pwjmwpv {
     /* JADX WARN: Code duplicated, block: B:162:0x0157 A[SYNTHETIC] */
     public static lcgzsis buswjhz(File file, String str, boolean z) throws IOException {
         long j;
-        boolean zEquals;
+        boolean zEquals = false;
         ArrayList arrayList = new ArrayList();
         String strDasxvpc = dasxvpc(str);
         FileInputStream fileInputStream = new FileInputStream(file);
@@ -263,7 +263,7 @@ public abstract class pwjmwpv {
         }
     }
 
-    public static long ekyqleu(int i, String str, String str2) {
+    public static long ekyqleu(int i, String str, String str2) throws IOException {
         int i2;
         String strReplace = str != null ? str.trim().replace("_", "") : "";
         if (strReplace.startsWith("0x") || strReplace.startsWith("0X")) {

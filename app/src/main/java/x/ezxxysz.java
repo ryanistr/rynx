@@ -9584,13 +9584,14 @@ public final /* synthetic */ class ezxxysz implements Runnable {
                 nmpwovhVar2.getClass();
                 try {
                     nmpwovhVar2.runOnUiThread(new btazysh(nmpwovhVar2, R.string.core_loading_mtk, 0));
-                    EncryptedNativeLoader.vivhedu(nmpwovhVar2, "core/a.bin", "a", "rynx_android");
+                    EncryptedNativeLoader.nmpwovh("rynx_core");
                     nmpwovhVar2.pvkaerr = true;
                     nmpwovhVar2.runOnUiThread(new btazysh(nmpwovhVar2, R.string.core_loading_fastboot, 0));
-                    EncryptedNativeLoader.vivhedu(nmpwovhVar2, "core/b.bin", "b", "rynx_adbfastboot");
+                    EncryptedNativeLoader.nmpwovh("rynx_adbfastboot");
                     nmpwovhVar2.runOnUiThread(new btazysh(nmpwovhVar2, R.string.core_loading_ready, 0));
                     nmpwovhVar2.runOnUiThread(new ezxxysz(nmpwovhVar2, 2));
                 } catch (Throwable th) {
+                    android.util.Log.e("RynxCore", "native core load failed", th);
                     nmpwovhVar2.runOnUiThread(new ezxxysz(nmpwovhVar2, th));
                     return;
                 }

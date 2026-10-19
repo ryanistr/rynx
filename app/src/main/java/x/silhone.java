@@ -31,7 +31,7 @@ public final /* synthetic */ class silhone implements Runnable {
         suqlntg suqlntgVar;
         String str;
         int i;
-        suqlntg suqlntgVar2;
+        suqlntg suqlntgVar2 = null;
         suqlntg suqlntgVar3;
         Throwable thAlias = null;
         switch (this.nmpwovh) {
@@ -49,6 +49,7 @@ public final /* synthetic */ class silhone implements Runnable {
                     if (i2 >= arrayList.size()) {
                         suqlntgVar = null;
                         str = null;
+                        break;
                     } else if (kggugdpVar.qwgjehf && kggugdpVar.nsyqsfj) {
                         ohwxijw ohwxijwVar = (ohwxijw) arrayList.get(i2);
                         File fileCzidoiw = com.rynx.app.ojyssqt.czidoiw(file, ohwxijwVar.nmpwovh);

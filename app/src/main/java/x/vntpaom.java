@@ -45,7 +45,7 @@ public final /* synthetic */ class vntpaom implements Runnable {
                 try {
                     ulafhci.ulafhci(mainActivity.getApplicationContext(), usbDevice, usbDeviceConnection, str2);
                     string = null;
-                } catch (nkemejx e) {
+                } catch (RuntimeException e) {
                     string = e.getMessage();
                     z = true;
                 } catch (Throwable th) {

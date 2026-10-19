@@ -78,7 +78,7 @@ public abstract class zsbaukl {
             ArrayList arrayList = new ArrayList(linkedHashMap.values());
             Collections.sort(arrayList, new guecdgy(1));
             return Collections.unmodifiableList(arrayList);
-        } catch (czgynww e) {
+        } catch (Exception e) {
             throw new zyxfuka(e.getMessage(), e);
         }
     }

@@ -19,12 +19,13 @@ import com.rynx.app.R;
 /* JADX INFO: loaded from: classes.dex */
 public final /* synthetic */ class dkpobjg implements View.OnClickListener {
     public final /* synthetic */ Object lthborb;
-    public final /* synthetic */ int nmpwovh = 1;
+    public final /* synthetic */ int nmpwovh;
     public final /* synthetic */ Object ojyssqt;
     public final /* synthetic */ Object qxvquar;
     public final /* synthetic */ Object vivhedu;
 
     public /* synthetic */ dkpobjg(AlertDialog alertDialog, EditText editText, String str, kggugdp kggugdpVar) {
+        this.nmpwovh = 1;
         this.lthborb = kggugdpVar;
         this.ojyssqt = editText;
         this.vivhedu = alertDialog;
@@ -262,6 +263,7 @@ public final /* synthetic */ class dkpobjg implements View.OnClickListener {
     }
 
     public /* synthetic */ dkpobjg(AlertDialog alertDialog, EditText editText, kggugdp kggugdpVar, ohwxijw ohwxijwVar) {
+        this.nmpwovh = 0;
         this.lthborb = kggugdpVar;
         this.qxvquar = ohwxijwVar;
         this.ojyssqt = editText;
@@ -269,6 +271,7 @@ public final /* synthetic */ class dkpobjg implements View.OnClickListener {
     }
 
     public /* synthetic */ dkpobjg(Dialog dialog, Context context, String str, ednetju ednetjuVar, sfildfy sfildfyVar) {
+        this.nmpwovh = 0;
         this.lthborb = dialog;
         this.qxvquar = context;
         this.ojyssqt = str;

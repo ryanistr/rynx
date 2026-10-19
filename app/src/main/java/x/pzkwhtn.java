@@ -45,7 +45,7 @@ public final /* synthetic */ class pzkwhtn implements Runnable {
         String string;
         int i;
         vlyywxv vlyywxvVar;
-        vlyywxv vlyywxvVar2;
+        vlyywxv vlyywxvVar2 = null;
         vlyywxv vlyywxvVar3;
         vlyywxv vlyywxvVar4;
         int iTqfwohl;

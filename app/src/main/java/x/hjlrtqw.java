@@ -8,12 +8,13 @@ import android.widget.EditText;
 /* JADX INFO: loaded from: classes.dex */
 public final /* synthetic */ class hjlrtqw implements DialogInterface.OnShowListener {
     public final /* synthetic */ kggugdp lthborb;
-    public final /* synthetic */ int nmpwovh = 1;
+    public final /* synthetic */ int nmpwovh;
     public final /* synthetic */ AlertDialog ojyssqt;
     public final /* synthetic */ Object qxvquar;
     public final /* synthetic */ EditText vivhedu;
 
     public /* synthetic */ hjlrtqw(AlertDialog alertDialog, EditText editText, String str, kggugdp kggugdpVar) {
+        this.nmpwovh = 1;
         this.lthborb = kggugdpVar;
         this.ojyssqt = alertDialog;
         this.vivhedu = editText;
@@ -41,6 +42,7 @@ public final /* synthetic */ class hjlrtqw implements DialogInterface.OnShowList
     }
 
     public /* synthetic */ hjlrtqw(AlertDialog alertDialog, EditText editText, kggugdp kggugdpVar, ohwxijw ohwxijwVar) {
+        this.nmpwovh = 0;
         this.lthborb = kggugdpVar;
         this.ojyssqt = alertDialog;
         this.qxvquar = ohwxijwVar;

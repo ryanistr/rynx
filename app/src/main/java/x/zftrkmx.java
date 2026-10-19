@@ -11,7 +11,7 @@ public final /* synthetic */ class zftrkmx implements Runnable {
     public final /* synthetic */ int imuemzb;
     public final /* synthetic */ String lthborb;
     public final /* synthetic */ int nkemejx;
-    public final /* synthetic */ int nmpwovh = 0;
+    public final /* synthetic */ int nmpwovh;
     public final /* synthetic */ com.rynx.app.nmpwovh ojyssqt;
     public final /* synthetic */ String oqexvyb;
     public final /* synthetic */ String qxvquar;
@@ -19,6 +19,7 @@ public final /* synthetic */ class zftrkmx implements Runnable {
     public final /* synthetic */ boolean wqrnifx;
 
     public /* synthetic */ zftrkmx(com.rynx.app.nmpwovh nmpwovhVar, int i, xhyvkax xhyvkaxVar, zwccvwt zwccvwtVar, String str, String str2, String str3, int i2, boolean z) {
+        this.nmpwovh = 0;
         this.ojyssqt = nmpwovhVar;
         this.nkemejx = i;
         this.vivhedu = xhyvkaxVar;
@@ -155,6 +156,7 @@ public final /* synthetic */ class zftrkmx implements Runnable {
     }
 
     public /* synthetic */ zftrkmx(com.rynx.app.nmpwovh nmpwovhVar, xhyvkax xhyvkaxVar, String str, String str2, String str3, int i, int i2, zwccvwt zwccvwtVar, boolean z) {
+        this.nmpwovh = 1;
         this.ojyssqt = nmpwovhVar;
         this.vivhedu = xhyvkaxVar;
         this.lthborb = str;

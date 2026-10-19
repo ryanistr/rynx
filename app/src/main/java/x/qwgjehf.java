@@ -8,12 +8,13 @@ import com.rynx.app.R;
 /* JADX INFO: loaded from: classes.dex */
 public final /* synthetic */ class qwgjehf implements Runnable {
     public final /* synthetic */ String lthborb;
-    public final /* synthetic */ int nmpwovh = 0;
+    public final /* synthetic */ int nmpwovh;
     public final /* synthetic */ Object ojyssqt;
     public final /* synthetic */ Object qxvquar;
     public final /* synthetic */ boolean vivhedu;
 
     public /* synthetic */ qwgjehf(MainActivity mainActivity, String str, String str2, boolean z) {
+        this.nmpwovh = 0;
         this.ojyssqt = mainActivity;
         this.lthborb = str;
         this.qxvquar = str2;
@@ -105,6 +106,7 @@ public final /* synthetic */ class qwgjehf implements Runnable {
     }
 
     public /* synthetic */ qwgjehf(MainActivity mainActivity, wqrnifx wqrnifxVar, boolean z, String str) {
+        this.nmpwovh = 1;
         this.ojyssqt = mainActivity;
         this.qxvquar = wqrnifxVar;
         this.vivhedu = z;
@@ -112,6 +114,7 @@ public final /* synthetic */ class qwgjehf implements Runnable {
     }
 
     public /* synthetic */ qwgjehf(rvrflql rvrflqlVar, TextView textView, String str, boolean z) {
+        this.nmpwovh = 2;
         this.ojyssqt = rvrflqlVar;
         this.qxvquar = textView;
         this.lthborb = str;

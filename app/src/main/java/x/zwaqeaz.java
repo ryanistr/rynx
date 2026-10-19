@@ -28,7 +28,12 @@ public final /* synthetic */ class zwaqeaz implements mwngani {
                 if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs() && !parentFile.isDirectory()) {
                     throw new IllegalStateException("Unable to create local directory: " + parentFile);
                 }
-                ulafhci ulafhciVar = new ulafhci(applicationContext, usbDevice, usbDeviceConnection);
+                ulafhci ulafhciVar;
+                try {
+                    ulafhciVar = new ulafhci(applicationContext, usbDevice, usbDeviceConnection);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 try {
                     ulafhciVar.lthborb();
                     String strTrim = null;
@@ -54,11 +59,10 @@ public final /* synthetic */ class zwaqeaz implements mwngani {
                 } catch (Throwable th) {
                     try {
                         ulafhciVar.close();
-                        break;
                     } catch (Throwable th2) {
                         th.addSuppressed(th2);
                     }
-                    throw th;
+                    throw new RuntimeException(th);
                 }
             default:
                 Context applicationContext2 = this.ojyssqt.getApplicationContext();
@@ -66,7 +70,12 @@ public final /* synthetic */ class zwaqeaz implements mwngani {
                 if (!file2.isFile()) {
                     throw new IllegalArgumentException("OTA package not found: " + file2);
                 }
-                ulafhci ulafhciVar2 = new ulafhci(applicationContext2, usbDevice, usbDeviceConnection);
+                ulafhci ulafhciVar2;
+                try {
+                    ulafhciVar2 = new ulafhci(applicationContext2, usbDevice, usbDeviceConnection);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 try {
                     ulafhciVar2.lthborb();
                     long jVntpaom = ulafhciVar2.vntpaom(file2);
@@ -75,11 +84,10 @@ public final /* synthetic */ class zwaqeaz implements mwngani {
                 } catch (Throwable th3) {
                     try {
                         ulafhciVar2.close();
-                        break;
                     } catch (Throwable th4) {
                         th3.addSuppressed(th4);
                     }
-                    throw th3;
+                    throw new RuntimeException(th3);
                 }
         }
     }

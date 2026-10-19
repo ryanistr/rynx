@@ -13,7 +13,7 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
     public final /* synthetic */ Object imuemzb;
     public final /* synthetic */ Serializable lthborb;
     public final /* synthetic */ Object nkemejx;
-    public final /* synthetic */ int nmpwovh = 2;
+    public final /* synthetic */ int nmpwovh;
     public final /* synthetic */ String ojyssqt;
     public final /* synthetic */ kggugdp oqexvyb;
     public final /* synthetic */ Serializable qxvquar;
@@ -21,6 +21,7 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
 
     /* JADX WARN: Multi-variable type inference failed */
     public /* synthetic */ lpkdqgx(MainActivity mainActivity, Object obj, boolean[] zArr, Dialog[] dialogArr, String str, String[] strArr, CountDownLatch countDownLatch) {
+        this.nmpwovh = 2;
         this.oqexvyb = mainActivity;
         this.vivhedu = obj;
         this.lthborb = zArr;
@@ -211,6 +212,7 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
     }
 
     public /* synthetic */ lpkdqgx(MainActivity mainActivity, String str, String str2, String str3, String str4, String str5, String str6) {
+        this.nmpwovh = 0;
         this.oqexvyb = mainActivity;
         this.ojyssqt = str;
         this.vivhedu = str2;
@@ -221,6 +223,7 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
     }
 
     public /* synthetic */ lpkdqgx(MainActivity mainActivity, String str, ohwxijw ohwxijwVar, File file, String str2, String str3, String str4) {
+        this.nmpwovh = 1;
         this.oqexvyb = mainActivity;
         this.ojyssqt = str;
         this.nkemejx = ohwxijwVar;
@@ -231,6 +234,7 @@ public final /* synthetic */ class lpkdqgx implements Runnable {
     }
 
     public /* synthetic */ lpkdqgx(kggugdp kggugdpVar, File file, File file2, String str, String str2, String str3, ArrayList arrayList) {
+        this.nmpwovh = 3;
         this.oqexvyb = kggugdpVar;
         this.qxvquar = file;
         this.nkemejx = file2;

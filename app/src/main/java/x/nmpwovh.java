@@ -23,7 +23,7 @@ public final /* synthetic */ class nmpwovh implements View.OnClickListener {
 
     @Override // android.view.View.OnClickListener
     public final void onClick(View view) {
-        String string;
+        String string = null;
         switch (this.nmpwovh) {
             case 0:
                 Activity activity = (Activity) this.ojyssqt;
@@ -63,7 +63,6 @@ public final /* synthetic */ class nmpwovh implements View.OnClickListener {
                             }
                             throw th;
                         }
-                        string = activity.getString(R.string.about_license_summary);
                     }
                 } catch (Exception unused) {
                     string = activity.getString(R.string.about_license_summary);
