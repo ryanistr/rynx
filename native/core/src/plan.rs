@@ -46,6 +46,9 @@ pub const FLAG_MASK: u8 = 0x0F;
 /// Flag bit the review sheet sets on the seccfg entry when Auto Relock was ticked.
 pub const FLAG_RELOCK: u8 = 0x08;
 
+/// The one partition the relock and preserve policies apply to.
+const SECCFG: &str = "seccfg";
+
 const LIMIT_SCATTER: usize = 4096;
 const LIMIT_PLATFORM: usize = 256;
 const LIMIT_STORAGE: usize = 64;
@@ -452,6 +455,17 @@ pub fn describe_fwup(plan: &FwupPlan, format: Format) -> String {
         plan.entries.len(),
         plan.selected().count()
     );
+    if plan.selected_names().contains(SECCFG) {
+        let _ = write!(
+            text,
+            "\n[FWUP] Auto Relock: {}",
+            if plan.entries.iter().any(|entry| entry.flags & FLAG_RELOCK != 0) {
+                "ON; preserving seccfg for recovery, then formatting only after postflight"
+            } else {
+                "OFF; preserving original seccfg"
+            }
+        );
+    }
     text
 }
 
@@ -684,6 +698,41 @@ mod tests {
             parse_fwup(&bytes).unwrap_err(),
             "Duplicate Firmware Upgrade partition: 'Boot'"
         );
+    }
+
+    #[test]
+    fn the_preflight_names_the_relock_policy_only_when_seccfg_is_in_play() {
+        let plain = parse_fwup(&fwup(
+            &[("boot", "/sdcard/boot.img", 1 << 20, 900_000, FLAG_SELECTED)],
+            "/sdcard/scatter.xml",
+        ))
+        .expect("plan parses");
+        let text = describe_fwup(&plain, Format::Xml);
+        assert!(!text.contains("Auto Relock"), "{text}");
+        assert!(text.contains("[FWUP] Preflight: parsing immutable Firmware Upgrade plan v2"));
+
+        let preserve = parse_fwup(&fwup(
+            &[("seccfg", "/sdcard/seccfg.img", 4096, 4096, FLAG_SELECTED)],
+            "/sdcard/scatter.xml",
+        ))
+        .expect("plan parses");
+        assert!(describe_fwup(&preserve, Format::Xml)
+            .contains("[FWUP] Auto Relock: OFF; preserving original seccfg"));
+
+        let relock = parse_fwup(&fwup(
+            &[(
+                "seccfg",
+                "/sdcard/seccfg.img",
+                4096,
+                4096,
+                FLAG_SELECTED | FLAG_RELOCK,
+            )],
+            "/sdcard/scatter.xml",
+        ))
+        .expect("plan parses");
+        assert!(describe_fwup(&relock, Format::Xml).contains(
+            "[FWUP] Auto Relock: ON; preserving seccfg for recovery, then formatting only after postflight"
+        ));
     }
 
     #[test]
