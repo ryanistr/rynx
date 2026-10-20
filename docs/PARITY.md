@@ -247,15 +247,17 @@ da, auth, preloader)` is the same shape without the verb and operands.
 | `reboot` | `normal`, `home-screen`, `fastboot`, `meta`, `test`; an empty operand means normal | `REBOOT COMPLETE` + `MODE` |
 | `shutdown` | power off | `SHUTDOWN COMPLETE` |
 | `crash` | assert the bootrom with a garbage DA image, dropping the SoC to BROM; refused while a DA is live | `CRASH TRIGGERED` + `TARGET` |
-| `scatter-download-v6` | read the scatter, flash it, resolve images beside it | `DOWNLOAD ONLY COMPLETE` + `ENGINE/PARTITIONS` |
-| `scatter-firmware-upgrade` | protocol gate, flash the package, report the layout facts it measured | `FIRMWARE UPGRADE COMPLETE` … |
+| `scatter-download-v6` | parse the plan, pin the scatter, flash only the named payloads | `DOWNLOAD ONLY COMPLETE` + `ENGINE/PARTITIONS` |
+| `scatter-firmware-upgrade` | pin the plan's scatter and images, flash the named payloads with the engine's own pre-flash backups, settle the seccfg policy, report the layout facts it measured | `FIRMWARE UPGRADE COMPLETE` … |
 
 Nothing above is verified against hardware: this machine has no MTK target on USB, so every
-USB/DA path is compile-, API- and unit-verified only (`cargo +nightly test -p rynx-core`, ten
-tests, three of them driving the engine's own `PlProtocol::get_hw_sw_ver` through the port
-wrapper). `HW VERSION`/`SW VERSION` are no longer a gap: the wrapper watches the version reply as
-it passes (`native/core/src/port_recorder.rs`) instead of waiting for an engine change. One gap
-remains — the reduced firmware-upgrade transaction — listed with its reason in
+USB/DA path is compile-, API- and unit-verified only (`cargo +nightly test -p rynx-core`,
+twenty-eight tests, three of them driving the engine's own `PlProtocol::get_hw_sw_ver` through the
+port wrapper). `HW VERSION`/`SW VERSION` are no longer a gap: the wrapper watches the version reply
+as it passes (`native/core/src/port_recorder.rs`) instead of waiting for an engine change, and the
+transactional firmware upgrade is no longer reduced to a bare scatter flash: the plan codec
+(`native/core/src/plan.rs`) authorizes the transaction and the remaining differences — protected-data
+record files, postflight re-audit, layout-migration handling — are listed with their reason in
 `docs/NATIVE-ENGINE-RE.md`.
 
 ## 8. Structural audit against the reference build
@@ -263,8 +265,9 @@ remains — the reduced firmware-upgrade transaction — listed with its reason 
 Run 2026-10-19 on the shipped bytes of both APKs: `apkanalyzer manifest print` and
 `aapt2 dump badging` for declarations, REA `decode_android_resources` (`include_strings: true`,
 locales `default` and `in`) for the string tables, `baksmali list classes|methods|fields` for the
-code. Reference artifact: `raffprjkt-4.1-stable-arm64-release.apk` (arm64-v8a, release,
-R8-minified). Rynx side: `build-apk/rynx-debug.apk`, md5 `294b0623c90a42e3ac60554bdcc26595`.
+code. Reference artifact: the released arm64-v8a build (release, R8-minified). Rynx side:
+`build-apk/rynx-debug.apk`, md5 `72aecef2a7b04019cf814b8ec7998f1b`; `librynx_core.so` md5
+`4f4761f337e966b37f62b361fd330e57` (device copy identical).
 
 | surface | reference | rynx | result |
 | --- | --- | --- | --- |
@@ -281,17 +284,17 @@ found no unexplained top-level class. The 69 ref-only names each have a class in
 same method multisets, which is expected after the R8 → decompile → javac round trip reshapes
 anonymous classes.
 
-Package inventory: outside `res/` the reference ships `AndroidManifest.xml`, `classes.dex`,
-`resources.arsc`, `lib/arm64-v8a/libraffprjkt_guard.so` and `assets/rfx/a.rfx` + `assets/rfx/b.rfx`
-— its two encrypted native payloads, the container rynx deliberately does not reproduce; rynx
-ships the two plain `librynx_*.so` instead. Neither APK carries a Download Agent, scatter file or
-certificate, so no runtime payload is missing.
+Package inventory: outside `res/` both APKs ship `AndroidManifest.xml`, `classes.dex` and
+`resources.arsc`; the reference additionally carries a guard library plus two encrypted native
+payloads under `assets/`, the container rynx deliberately does not reproduce — it ships the two
+plain `librynx_*.so` instead. Neither APK carries a Download Agent, scatter file or certificate, so
+no runtime payload is missing.
 
 Resource table, compared by name through `aapt2 dump resources` (R8 shuffles `res/` file paths, so
 paths are not comparable): 1343 entries in the reference against 1340 in rynx, with 1092 strings,
 146 dimens, 49 colours, 12 integers, 2 styles, 1 xml and 1 raw on both sides. Every name difference
-is either the `raff_*` → `rynx_*` colour rename, `Theme.Raffprjkt.*` → `Theme.Rynx.*`, or one of the
-three deliberately removed image assets (`rafi_creator_animation` and the two launcher mipmaps). The
+is either a brand rename (colours and the theme prefix now carry the rynx name) or one of the three
+deliberately removed image assets (one upstream creator animation and the two launcher mipmaps). The
 single `raw` entry is the GNU AGPL v3 text on both sides: the reference asset, rynx's
 `res/raw/agpl_3_0.txt` and the repository `LICENSE` are byte-identical, md5
 `4ae09d45eac4aa08d013b5f2e01c67f6`.

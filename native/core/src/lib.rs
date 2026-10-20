@@ -14,14 +14,15 @@
 //! label set and line order here are fixed, not cosmetic. See `../../docs/PARITY.md` §6 and
 //! `../../docs/NATIVE-ENGINE-RE.md`.
 
+use std::collections::BTreeSet;
 use std::fmt::Display;
 use std::fs::{self, File};
 use std::io::{Cursor, Write};
 use std::os::fd::RawFd;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, UNIX_EPOCH};
 
 use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JString};
@@ -41,6 +42,7 @@ use penumbra_mtk::port::ConnectionType;
 use penumbra_mtk::{BootMode, Error, MtkPort, Partition, PlProtocol};
 use usbfs::{EP_IN_DEFAULT, EP_OUT_DEFAULT, Endpoints, UsbfsPort};
 
+mod plan;
 mod port_recorder;
 use port_recorder::{HwSwVersion, RecordingPort};
 
@@ -474,9 +476,9 @@ fn dispatch(session: &mut Session, verb: &str, operands: &[String]) -> Result<St
             session.dev.shutdown().map_err(describe)?;
             Ok("SHUTDOWN COMPLETE".into())
         }
-        "scatter-download-v6" => download_only(session, &required(0, "scatter path")?),
+        "scatter-download-v6" => download_only(session, &required(0, "plan path")?, &operand(1)),
         "scatter-firmware-upgrade" => {
-            firmware_upgrade(session, &required(0, "scatter path")?)
+            firmware_upgrade(session, &required(0, "plan path")?, &operand(1))
         }
         other => Err(format!("unsupported command '{other}'")),
     }
@@ -601,27 +603,111 @@ fn bootctrl_set(session: &mut Session, slot: &str) -> Result<String, String> {
     Ok("BOOTCTRL UPDATED\n".into())
 }
 
-/// Source/sink closures for scatter flashing: images resolve beside the scatter file, backups are
-/// written beside it too.
-fn scatter_io(
-    base: &Path,
+fn scatter_base(path: &str) -> std::path::PathBuf {
+    Path::new(path)
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_default()
+}
+
+/// Operand 0 of the two scatter verbs. The app freezes its review into a `.plan` and passes that;
+/// the console has no review step, so a plain scatter path is still accepted. The magic decides.
+enum Operand {
+    Plan(Vec<u8>),
+    Scatter(String),
+}
+
+fn read_operand(path: &str) -> Result<Operand, String> {
+    let bytes = fs::read(path).map_err(|e| format!("cannot read {path}: {e}"))?;
+    if bytes.starts_with(plan::FWUP_MAGIC) || bytes.starts_with(plan::DLV6_MAGIC) {
+        return Ok(Operand::Plan(bytes));
+    }
+    match String::from_utf8(bytes) {
+        Ok(content) => Ok(Operand::Scatter(content)),
+        Err(_) => Err(format!(
+            "{path} is neither a transaction plan nor a text scatter"
+        )),
+    }
+}
+
+/// Milliseconds since the epoch — the unit the app stamped into the plan.
+fn mtime_ms(path: &Path) -> Option<u64> {
+    fs::metadata(path)
+        .and_then(|meta| meta.modified())
+        .ok()
+        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
+        .map(|since| since.as_millis() as u64)
+}
+
+/// The scatter has to be the exact file the review saw: a swap between review and flash would
+/// authorize partitions the plan never listed.
+fn pinned_scatter(path: &str, size: u64, timestamp: u64) -> Result<String, String> {
+    let meta = fs::metadata(path).map_err(|e| format!("cannot stat {path}: {e}"))?;
+    if meta.len() != size || mtime_ms(Path::new(path)) != Some(timestamp) {
+        return Err("Scatter source changed since the review".into());
+    }
+    fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))
+}
+
+/// Selected payloads must be the files the review stat'ed, byte for byte.
+fn pinned_images(entries: &[plan::FwupEntry]) -> Result<(), String> {
+    for entry in entries.iter().filter(|entry| entry.selected()) {
+        let meta = fs::metadata(&entry.image).map_err(|e| {
+            format!(
+                "Firmware Upgrade image is unreadable for '{}': {e}",
+                entry.name
+            )
+        })?;
+        if meta.len() != entry.image_size
+            || mtime_ms(Path::new(&entry.image)) != Some(entry.image_timestamp)
+        {
+            return Err(format!(
+                "Firmware Upgrade image changed after review: {}",
+                entry.name
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Source/sink closures for a scatter transaction.
+///
+/// The sink is where the engine puts its pre-write copies of protected partitions
+/// (`<random_id>/<partition>.bin`), and it reads those back through the source when a partition has
+/// to be restored — so the source serves both the scatter's payloads and the engine's own backups.
+/// With an authorization list, a payload the plan did not freeze is refused outright, even when the
+/// scatter spells it differently.
+fn transaction_io(
+    scatter_dir: &Path,
+    backup_dir: &Path,
+    allowed: Option<&[(String, String)]>,
 ) -> (
     impl FnMut(&str) -> Result<(File, u64), Error> + Send + use<>,
     impl FnMut(&str) -> Result<File, Error> + Send + use<>,
 ) {
-    let source_base = base.to_path_buf();
-    let sink_base = base.to_path_buf();
-    let source = move |image: &str| -> Result<(File, u64), Error> {
-        let file = if source_base.as_os_str().is_empty() || Path::new(image).is_absolute() {
-            File::open(image)?
+    let scattered = scatter_dir.to_path_buf();
+    let backups = backup_dir.to_path_buf();
+    let read_back = backups.clone();
+    let allowed = allowed.map(<[_]>::to_vec);
+    let source = move |request: &str| -> Result<(File, u64), Error> {
+        let own_copy = read_back.join(request);
+        let path = if own_copy.is_file() {
+            own_copy
+        } else if let Some(allowed) = &allowed {
+            plan::authorize(request, &scattered, allowed).ok_or_else(|| {
+                Error::ParseError(format!("image '{request}' is not in the reviewed plan"))
+            })?
+        } else if Path::new(request).is_absolute() || scattered.as_os_str().is_empty() {
+            PathBuf::from(request)
         } else {
-            File::open(source_base.join(image))?
+            scattered.join(request)
         };
+        let file = File::open(&path)?;
         let size = file.metadata()?.len();
         Ok((file, size))
     };
     let sink = move |name: &str| -> Result<File, Error> {
-        let target = sink_base.join(name);
+        let target = backups.join(name);
         if let Some(dir) = target.parent() {
             fs::create_dir_all(dir)?;
         }
@@ -630,80 +716,344 @@ fn scatter_io(
     (source, sink)
 }
 
-fn scatter_base(path: &str) -> std::path::PathBuf {
-    Path::new(path)
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_default()
+/// Where the engine keeps its pre-flash copies: the directory the app hands over, or — for a
+/// console run, which passes none — a fresh sibling of the scatter so runs never mix.
+fn backup_root(operand: &str, base: &Path) -> PathBuf {
+    let operand = operand.trim();
+    if !operand.is_empty() {
+        return PathBuf::from(operand);
+    }
+    base.join(format!("rynx-backup-{}", mtime_ms(Path::new(".")).unwrap_or(0)))
+}
+
+/// Bytes actually held by the backup tree, which is what the payload reports.
+fn dir_bytes(path: &Path) -> u64 {
+    let Ok(entries) = fs::read_dir(path) else {
+        return 0;
+    };
+    let mut total = 0u64;
+    for entry in entries.flatten() {
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        total += if meta.is_dir() {
+            dir_bytes(&entry.path())
+        } else {
+            meta.len()
+        };
+    }
+    total
+}
+
+/// Read the signed seccfg block before a transaction that is going to overwrite it.
+fn seccfg_backup(session: &mut Session) -> Option<Vec<u8>> {
+    session.dev.get_partition("seccfg")?;
+    let mut buffer = Vec::new();
+    session
+        .dev
+        .read_partition("seccfg", &mut buffer, |_, _| {})
+        .ok()?;
+    (!buffer.is_empty()).then_some(buffer)
+}
+
+/// Restore or reformat seccfg once the transaction has landed. A failure here is reported, not
+/// raised: the flash itself already succeeded and the app must not lose that result.
+fn apply_seccfg_policy(session: &mut Session, backup: Option<Vec<u8>>, relock: bool) -> String {
+    if relock {
+        return match session.dev.erase_partition("seccfg", |_, _| {}) {
+            Ok(()) => "REFORMATTED".into(),
+            Err(err) => format!("REFORMAT FAILED ({})", first_line(&describe(err))),
+        };
+    }
+    match backup {
+        Some(bytes) => {
+            let size = bytes.len() as u64;
+            match session
+                .dev
+                .write_partition("seccfg", size, Cursor::new(bytes), |_, _| {})
+            {
+                Ok(()) => "RESTORED".into(),
+                Err(err) => format!("RESTORE FAILED ({})", first_line(&describe(err))),
+            }
+        }
+        None => "UNAVAILABLE".into(),
+    }
+}
+
+fn first_line(text: &str) -> &str {
+    text.lines().next().unwrap_or("").trim()
+}
+
+/// Refuse an engine/format pair that cannot run the transaction before any write happens.
+fn check_engine_format(engine: &str, xml: bool) -> Result<(), String> {
+    match (engine, xml) {
+        ("XFlash/V5", true) => {
+            Err("XFlash/V5 DA cannot run an XML/V6 Firmware Upgrade".into())
+        }
+        ("XML/V6", false) => Err("XML/V6 DA requires an XML scatter for Firmware Upgrade".into()),
+        _ => Ok(()),
+    }
+}
+
+/// One firmware-upgrade transaction: flash, measure, then settle the seccfg policy.
+struct Upgrade<'a> {
+    content: &'a str,
+    base: &'a Path,
+    /// Where the engine keeps the copies it makes before overwriting a partition.
+    backup: &'a Path,
+    /// `None` for a console scatter, which carries no plan and therefore no authorization list.
+    allowed: Option<&'a [(String, String)]>,
+    version: &'a str,
+    scatter_path: &'a str,
+    authorized: usize,
+    writes_seccfg: bool,
+    relock: bool,
+}
+
+fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<String, String> {
+    let engine = protocol_label(&mut session.dev);
+    let seccfg = if upgrade.writes_seccfg && !upgrade.relock {
+        let backup = seccfg_backup(session);
+        if backup.is_none() {
+            return Err(
+                "the original seccfg cannot be read, so it cannot be restored after the flash"
+                    .into(),
+            );
+        }
+        backup
+    } else {
+        None
+    };
+
+    let before = partition_signature(&mut session.dev);
+    {
+        let (source, sink) = transaction_io(upgrade.base, upgrade.backup, upgrade.allowed);
+        session
+            .dev
+            .flash_scatter(upgrade.content, source, sink, |_, _| {})
+            .map_err(describe)?;
+    }
+    let after = partition_signature(&mut session.dev);
+    let layout_changed = if before == after { "NO" } else { "YES" };
+
+    let policy = if upgrade.writes_seccfg {
+        apply_seccfg_policy(session, seccfg.clone(), upgrade.relock)
+    } else {
+        "PRESERVED".to_string()
+    };
+
+    // What the engine wrote to disk is retained for recovery; the in-memory seccfg copy is not.
+    let retained = dir_bytes(upgrade.backup);
+    let backup_bytes = retained + seccfg.map(|bytes| bytes.len() as u64).unwrap_or(0);
+
+    Ok(format!(
+        "FIRMWARE UPGRADE COMPLETE\n\
+         ENGINE: {engine}\n\
+         FLASH_UPDATE_VERSION: {}\n\
+         \n\
+         SCATTER: {}\n\
+         CHECKSUM_LEVEL: NONE\n\
+         HOST_CALLBACK_CONTRACT: NONE\n\
+         HOST_FILESYSTEM_OPS: NATIVE\n\
+         LAYOUT_CHANGED: {layout_changed}\n\
+         POSTFLIGHT_PARTITIONS: {}\n\
+         AUTO_RELOCK: {}\n\
+         SECCFG_POLICY: {policy}\n\
+         AUTHORIZED_IMAGES: {}\n\
+         NATIVE_BACKUP_BYTES: {backup_bytes}\n\
+         NATIVE_BACKUP_RETAINED_BYTES: {retained}\n\
+         BOOT_SLOT_POLICY: UNCHANGED",
+        upgrade.version,
+        upgrade.scatter_path,
+        after.len(),
+        if upgrade.relock { "ON" } else { "OFF" },
+        upgrade.authorized
+    ))
+}
+
+/// Names a plan froze as writable, lowercased for the scatter lookups.
+fn writable_names(scatter: &ScatterFile) -> BTreeSet<String> {
+    scatter
+        .parts
+        .iter()
+        .filter(|part| part.download && part.path.is_some())
+        .map(|part| part.part.name.to_ascii_lowercase())
+        .collect()
 }
 
 /// `scatter-download-v6`: one scatter package flashed in a single call.
-fn download_only(session: &mut Session, path: &str) -> Result<String, String> {
-    let content = fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
-    let scatter = parse_scatter(&content)?;
+fn download_only(session: &mut Session, path: &str, backup: &str) -> Result<String, String> {
+    match read_operand(path)? {
+        Operand::Plan(bytes) => download_only_plan(session, &bytes, backup),
+        Operand::Scatter(content) => download_only_scatter(session, &content, path, backup),
+    }
+}
+
+fn download_only_scatter(
+    session: &mut Session,
+    content: &str,
+    path: &str,
+    backup: &str,
+) -> Result<String, String> {
+    let scatter = parse_scatter(content)?;
     let images = scatter_image_count(&scatter);
     let engine = protocol_label(&mut session.dev);
     let base = scatter_base(path);
-    let (source, sink) = scatter_io(&base);
+    let (source, sink) = transaction_io(&base, &backup_root(backup, &base), None);
     session
         .dev
-        .flash_scatter(&content, source, sink, |_, _| {})
+        .flash_scatter(content, source, sink, |_, _| {})
         .map_err(describe)?;
     Ok(format!(
         "DOWNLOAD ONLY COMPLETE\nENGINE: {engine} WRITE-PARTITIONS\nPARTITIONS: {images}"
     ))
 }
 
-/// `scatter-firmware-upgrade`: a whole firmware package written as one transaction, then
-/// reported with the layout facts the app shows.
-fn firmware_upgrade(session: &mut Session, path: &str) -> Result<String, String> {
-    let content = fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
-    let xml = scatter_is_xml(&content);
-    let engine = protocol_label(&mut session.dev);
-    match (engine, xml) {
-        ("XFlash/V5", true) => {
-            return Err("XFlash/V5 DA cannot run an XML/V6 Firmware Upgrade".into());
+fn download_only_plan(
+    session: &mut Session,
+    bytes: &[u8],
+    backup: &str,
+) -> Result<String, String> {
+    let plan = plan::parse_dlv6(bytes)?;
+    let content = fs::read_to_string(&plan.scatter_path)
+        .map_err(|e| format!("cannot read {}: {e}", plan.scatter_path))?;
+    for entry in &plan.entries {
+        let size = fs::metadata(&entry.image)
+            .map_err(|e| {
+                format!(
+                    "V6 Download Only image is unreadable for '{}': {e}",
+                    entry.name
+                )
+            })?
+            .len();
+        if size != entry.size {
+            return Err(format!(
+                "V6 Download Only image changed after review: {}",
+                entry.name
+            ));
         }
-        ("XML/V6", false) => {
-            return Err("XML/V6 DA requires an XML scatter for Firmware Upgrade".into());
-        }
-        _ => {}
     }
-    let scatter = parse_scatter(&content)?;
+    let selected: BTreeSet<String> = plan
+        .entries
+        .iter()
+        .map(|entry| entry.name.to_ascii_lowercase())
+        .collect();
+    let filtered = plan::filter_scatter(&content, &selected);
+    let allowed =
+        plan::authorized_images(plan.entries.iter().map(|e| (e.name.as_str(), e.image.as_str())));
+    let engine = protocol_label(&mut session.dev);
+    let base = scatter_base(&plan.scatter_path);
+    let (source, sink) = transaction_io(&base, &backup_root(backup, &base), Some(&allowed));
+
+    session
+        .dev
+        .flash_scatter(&filtered, source, sink, |_, _| {})
+        .map_err(describe)?;
+    Ok(format!(
+        "DOWNLOAD ONLY COMPLETE\nENGINE: {engine} WRITE-PARTITIONS\nPARTITIONS: {}",
+        plan.entries.len()
+    ))
+}
+
+/// `scatter-firmware-upgrade`: a whole firmware package written as one transaction, then reported
+/// with the layout facts the app shows.
+fn firmware_upgrade(session: &mut Session, path: &str, backup: &str) -> Result<String, String> {
+    match read_operand(path)? {
+        Operand::Plan(bytes) => firmware_upgrade_plan(session, &bytes, backup),
+        Operand::Scatter(content) => firmware_upgrade_scatter(session, &content, path, backup),
+    }
+}
+
+fn firmware_upgrade_scatter(
+    session: &mut Session,
+    content: &str,
+    path: &str,
+    backup: &str,
+) -> Result<String, String> {
+    let xml = scatter_is_xml(content);
+    let engine = protocol_label(&mut session.dev);
+    check_engine_format(engine, xml)?;
+    let scatter = parse_scatter(content)?;
     let images = scatter_image_count(&scatter);
     if images == 0 {
         return Err("Firmware Upgrade plan contains no selected payloads".into());
     }
-    let version = if xml { "2.0" } else { "n/a" };
-
-    let before = partition_signature(&mut session.dev);
+    let selected = writable_names(&scatter);
+    let writes_seccfg = selected.contains("seccfg");
+    let filtered = plan::filter_scatter(content, &selected);
     let base = scatter_base(path);
-    let (source, sink) = scatter_io(&base);
-    session
-        .dev
-        .flash_scatter(&content, source, sink, |_, _| {})
-        .map_err(describe)?;
-    let after = partition_signature(&mut session.dev);
-    let layout_changed = if before == after { "NO" } else { "YES" };
+    run_firmware_upgrade(
+        session,
+        Upgrade {
+            content: &filtered,
+            base: &base,
+            backup: &backup_root(backup, &base),
+            allowed: None,
+            version: if xml { "2.0" } else { "n/a" },
+            scatter_path: path,
+            authorized: images,
+            writes_seccfg,
+            relock: false,
+        },
+    )
+}
 
+/// The plan is the authorization list: the scatter it names must still be the reviewed file, every
+/// selected image must still match the size and timestamp the review recorded, and the engine may
+/// not open a payload the plan does not name.
+fn firmware_upgrade_plan(
+    session: &mut Session,
+    bytes: &[u8],
+    backup: &str,
+) -> Result<String, String> {
+    let plan = plan::parse_fwup(bytes)?;
+    let selected = plan.selected_names();
+    if selected.is_empty() {
+        return Err("Firmware Upgrade plan contains no selected payloads".into());
+    }
+    let content = pinned_scatter(&plan.scatter_path, plan.scatter_size, plan.scatter_timestamp)?;
+    let xml = scatter_is_xml(&content);
+    let engine = protocol_label(&mut session.dev);
+    check_engine_format(engine, xml)?;
+    let scatter = parse_scatter(&content)?;
+    let listed = writable_names(&scatter);
+    if let Some(missing) = selected.iter().find(|name| !listed.contains(*name)) {
+        return Err(format!(
+            "Firmware Upgrade review contains a payload not present in the scatter: {missing}"
+        ));
+    }
+    pinned_images(&plan.entries)?;
+
+    let filtered = plan::filter_scatter(&content, &selected);
+    let allowed = plan::authorized_images(plan.selected().map(|e| (e.name.as_str(), e.image.as_str())));
+    let relock = plan
+        .entries
+        .iter()
+        .any(|entry| entry.flags & plan::FLAG_RELOCK != 0);
+    let base = scatter_base(&plan.scatter_path);
+    let backups = backup_root(backup, &base);
+    let report = run_firmware_upgrade(
+        session,
+        Upgrade {
+            content: &filtered,
+            base: &base,
+            backup: &backups,
+            allowed: Some(&allowed),
+            version: "2.0",
+            scatter_path: &plan.scatter_path,
+            authorized: allowed.len(),
+            writes_seccfg: selected.contains("seccfg"),
+            relock,
+        },
+    )?;
+    let format = if xml {
+        plan::Format::Xml
+    } else {
+        plan::Format::Yaml
+    };
     Ok(format!(
-        "FIRMWARE UPGRADE COMPLETE\n\
-         ENGINE: {engine}\n\
-         FLASH_UPDATE_VERSION: {version}\n\
-         \n\
-         SCATTER: {path}\n\
-         CHECKSUM_LEVEL: NONE\n\
-         HOST_CALLBACK_CONTRACT: NONE\n\
-         HOST_FILESYSTEM_OPS: NATIVE\n\
-         LAYOUT_CHANGED: {layout_changed}\n\
-         POSTFLIGHT_PARTITIONS: {}\n\
-         AUTO_RELOCK: OFF\n\
-         SECCFG_POLICY: PRESERVE\n\
-         AUTHORIZED_IMAGES: {images}\n\
-         NATIVE_BACKUP_BYTES: 0\n\
-         NATIVE_BACKUP_RETAINED_BYTES: 0\n\
-         BOOT_SLOT_POLICY: UNCHANGED",
-        after.len()
+        "{}\n{report}",
+        plan::describe_fwup(&plan, format)
     ))
 }
 
@@ -1129,6 +1479,135 @@ mod tests {
             None,
         ));
         assert_eq!(scatter_image_count(&scatter), 1);
+    }
+
+    fn scratch(name: &str) -> std::path::PathBuf {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("target/test-scratch")
+            .join(name);
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).expect("scratch dir");
+        dir
+    }
+
+    #[test]
+    fn the_operand_kind_is_read_from_the_magic() {
+        let dir = scratch("operand-kind");
+        let plan_path = dir.join("review.plan");
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(plan::FWUP_MAGIC);
+        bytes.extend_from_slice(&plan::FWUP_VERSION.to_be_bytes());
+        fs::write(&plan_path, &bytes).expect("write plan");
+
+        let path = plan_path.to_str().unwrap();
+        assert!(matches!(read_operand(path).unwrap(), Operand::Plan(_)));
+
+        let scatter_path = dir.join("scatter.xml");
+        fs::write(&scatter_path, b"<scatter/>").expect("write scatter");
+        assert!(matches!(
+            read_operand(scatter_path.to_str().unwrap()).unwrap(),
+            Operand::Scatter(_)
+        ));
+
+        // Binary that is neither: the console gets a refusal, not a parse of garbage.
+        let blob = dir.join("blob.bin");
+        fs::write(&blob, [0xff_u8, 0x00, 0xfe]).expect("write blob");
+        assert!(read_operand(blob.to_str().unwrap()).is_err());
+    }
+
+    #[test]
+    fn a_scatter_swapped_after_the_review_is_refused() {
+        let dir = scratch("pinned-scatter");
+        let path = dir.join("scatter.xml");
+        fs::write(&path, b"<scatter/>").expect("write scatter");
+        let text = path.to_str().unwrap();
+        let size = fs::metadata(&path).unwrap().len();
+        let stamp = mtime_ms(&path).unwrap();
+
+        assert_eq!(pinned_scatter(text, size, stamp).unwrap(), "<scatter/>");
+        assert_eq!(
+            pinned_scatter(text, size + 1, stamp).unwrap_err(),
+            "Scatter source changed since the review"
+        );
+        assert_eq!(
+            pinned_scatter(text, size, stamp + 1).unwrap_err(),
+            "Scatter source changed since the review"
+        );
+    }
+
+    fn fwup_bytes(image: &str, image_size: u64, image_timestamp: u64) -> Vec<u8> {
+        fn put(out: &mut Vec<u8>, value: &str) {
+            out.extend_from_slice(&(value.len() as u32).to_be_bytes());
+            out.extend_from_slice(value.as_bytes());
+        }
+        let mut out = Vec::new();
+        out.extend_from_slice(plan::FWUP_MAGIC);
+        out.extend_from_slice(&plan::FWUP_VERSION.to_be_bytes());
+        put(&mut out, "/sdcard/scatter.xml");
+        put(&mut out, "MT6893");
+        put(&mut out, "UFS");
+        out.extend_from_slice(&4096u64.to_be_bytes());
+        out.extend_from_slice(&7u64.to_be_bytes());
+        out.extend_from_slice(&9u64.to_be_bytes());
+        out.extend_from_slice(&1u32.to_be_bytes());
+        put(&mut out, "boot");
+        put(&mut out, image);
+        put(&mut out, "UPDATE");
+        put(&mut out, "EMMC_USER");
+        put(&mut out, "UFS");
+        out.extend_from_slice(&0u64.to_be_bytes());
+        out.extend_from_slice(&image_size.to_be_bytes());
+        out.extend_from_slice(&image_size.to_be_bytes());
+        out.extend_from_slice(&image_timestamp.to_be_bytes());
+        out.push(plan::FLAG_SELECTED);
+        out
+    }
+
+    #[test]
+    fn a_payload_that_changed_after_the_review_is_refused() {
+        let dir = scratch("pinned-images");
+        let image = dir.join("boot.img");
+        fs::write(&image, b"kernel").expect("write image");
+        let name = image.to_str().unwrap();
+        let size = fs::metadata(&image).unwrap().len();
+        let stamp = mtime_ms(&image).unwrap();
+
+        let reviewed = plan::parse_fwup(&fwup_bytes(name, size, stamp)).expect("plan parses");
+        assert!(pinned_images(&reviewed.entries).is_ok());
+
+        let grown = plan::parse_fwup(&fwup_bytes(name, size + 1, stamp)).expect("plan parses");
+        assert_eq!(
+            pinned_images(&grown.entries).unwrap_err(),
+            "Firmware Upgrade image changed after review: boot"
+        );
+        let restamped = plan::parse_fwup(&fwup_bytes(name, size, stamp + 1)).expect("plan parses");
+        assert_eq!(
+            pinned_images(&restamped.entries).unwrap_err(),
+            "Firmware Upgrade image changed after review: boot"
+        );
+    }
+
+    #[test]
+    fn a_plan_only_opens_the_images_it_authorized() {
+        use std::io::Write;
+
+        let dir = scratch("authorized-io");
+        let boot = dir.join("boot.img");
+        fs::write(&boot, b"kernel").expect("write image");
+        let allowed = plan::authorized_images([("boot", boot.to_str().unwrap())].into_iter());
+        let backups = dir.join("backup");
+        let (mut source, mut sink) = transaction_io(&dir, &backups, Some(&allowed));
+
+        // The scatter spells the payload relatively; the plan's canonical path wins.
+        assert_eq!(source("images/boot.img").unwrap().1, 6);
+        assert!(source("images/vendor.img").is_err());
+
+        // The engine reads its own pre-flash copy back through the same source.
+        sink("device/seccfg.bin")
+            .unwrap()
+            .write_all(b"signed")
+            .expect("backup");
+        assert_eq!(source("device/seccfg.bin").unwrap().1, 6);
     }
 }
 

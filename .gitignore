@@ -16,3 +16,4 @@ captures/
 .externalNativeBuild/
 .cxx/
 .DS_Store
+native/*/target/

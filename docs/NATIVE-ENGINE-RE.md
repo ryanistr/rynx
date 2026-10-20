@@ -205,6 +205,22 @@ operative sentence is kept — reboot to Preloader and try again — but the pro
 belongs to the engine and is not carried into a runtime string here. The payload text around it is
 unchanged.
 
+## Recovered plan format
+
+The two scatter verbs receive their selection as a plan file, not as a scatter path — the app
+freezes its review into a temp file and hands that over as operand 0. Recovered from the writers in
+the app half and reproduced in `native/core/src/plan.rs`:
+
+| Plan | Magic | Header | Entry |
+|---|---|---|---|
+| Firmware Upgrade v2 | `RYNXFWU2!` | `version:u32`, `scatter:str`, `platform:str`, `storage:str`, `scatter_block_size:u64`, `scatter_size:u64`, `scatter_timestamp:u64`, `count:u32` | `name`, `image`, `operation`, `region`, `storage` (str), `address`, `size`, `image_size`, `image_timestamp` (u64), `flags:u8` |
+| Download Only v6 | `RYNXDLV61` | `version:u32`, `scatter:str`, `platform:str`, `storage:str`, `count:u32` | `name`, `image` (str), `size:u64` |
+
+Every integer is big-endian, and a string is a `u32` length followed by that many UTF-8 bytes,
+refused when the length exceeds the field's limit. `flags` bit `0x08` is the Auto Relock tick the
+app sets on the seccfg row. The operand's kind is decided by the magic, so a console invocation that
+passes a plain scatter still works.
+
 ## What this core does not reproduce
 
 Honest gaps, not oversights:
@@ -230,12 +246,24 @@ Honest gaps, not oversights:
   `RecordingPort<UsbfsPort>`, and `build_session` snapshots the triple after `dev.init()`. Tests drive
   the engine's real `PlProtocol::get_hw_sw_ver` against a scripted device, plus the short-reply and
   unrelated-traffic cases (`native/core/src/port_recorder.rs`, tests).
-* **Firmware-upgrade internals are reduced.** The reference engine runs a full transactional
-  FWUP: immutable plan v2, protected-data record files, seccfg preservation and recovery,
-  auto-relock policy, native backup bookkeeping, layout-migration detection. This core runs one
-  `flash_scatter` transaction, checks the scatter against the live DA protocol, and reports the
-  layout facts it can actually measure. Payload fields for machinery it does not have are emitted
-  at their true values (`NONE`, `0`, `NO`), never copied from the reference.
+* **Firmware-upgrade internals are reproduced from the plan, with the differences named at the end.**
+  reference engine runs a full transactional FWUP: immutable plan v2, seccfg preservation and
+  recovery, auto-relock policy, native backup bookkeeping, layout-migration detection. This core
+  parses the same plan (`native/core/src/plan.rs`: `RYNXFWU2!` v2 and `RYNXDLV61` v1, big-endian,
+  u32-length strings) and enforces it as an authorization list — the scatter must still match the
+  reviewed size and epoch-millisecond timestamp, every selected image must still match its recorded
+  size and timestamp, and the flash may only open payloads the plan names. The second operand, the
+  backup directory the app creates (`/sdcard/rynx/Backup/FirmwareUpgrade-<device>-<ms>`), is handed
+  to the engine's sink, so the protected-partition copies land there and are read back through the
+  same source when a partition has to be restored; `NATIVE_BACKUP_BYTES` and
+  `NATIVE_BACKUP_RETAINED_BYTES` are measured from that tree, not copied. seccfg is preserved by
+  reading the block before the flash and writing it back afterwards unless Auto Relock is set, in
+  which case it is reformatted. What is **not** reproduced: the reference's protected-data *record*
+  files (`RECORD_FILE_STATUS` is absent from the payload), its postflight partition re-audit beyond
+  the count and signature this core can measure, and its own layout-migration handling — here
+  `LAYOUT_CHANGED` is a comparison of the partition signature before and after. Fields for machinery
+  that does not exist are emitted at their true values (`NONE`, `0`, `NO`), never copied from the
+  reference.
 * **Dispatch ids, none of this.** `nativeRunCommand`/`nativeRunGuiAction` take an integer
   `commandId` that the app passes through untouched; the engine ignores it, as this core does.
 

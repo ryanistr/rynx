@@ -9,7 +9,8 @@ needs because Android hands out a raw file descriptor instead of a USB handle.
 native/
   usbfs/        transport: USBDEVFS_* transfers, implements the engine's MtkPort trait
   core/         session, command dispatch, JNI_OnLoad for com.rynx.app.MainActivity,
-                and port_recorder.rs (keeps the preloader's HW/SW version, see docs)
+                port_recorder.rs (keeps the preloader's HW/SW version), plan.rs
+                (the transactional plan the scatter verbs are driven by), see docs
   adbfastboot/  raw usbfs transfers + fastboot verbs for AdbFastbootNative
   build.sh      cross-compile for arm64-v8a and install into app/src/main/jniLibs/
 ```
