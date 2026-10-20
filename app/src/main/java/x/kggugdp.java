@@ -2903,35 +2903,33 @@ public abstract class kggugdp extends com.rynx.app.nmpwovh {
                     Iterator it = arrayList.iterator();
                     while (it.hasNext()) {
                         araemok araemokVar = (araemok) it.next();
-                        if (araemokVar != null) {
-                            File file = araemokVar.ojyssqt;
-                            ohwxijw ohwxijwVar = araemokVar.nmpwovh;
-                            if (ohwxijwVar != null && file != null) {
-                                Iterator it2 = this.wdznaie.nkemejx.iterator();
-                                while (true) {
-                                    boolean zHasNext = it2.hasNext();
-                                    str = ohwxijwVar.nmpwovh;
-                                    if (!zHasNext) {
-                                        aqyicqlVar = null;
-                                        break;
-                                    }
-                                    aqyicqlVar = (aqyicql) it2.next();
-                                    if (aqyicqlVar != null && aqyicqlVar.ojyssqt.equalsIgnoreCase(str)) {
-                                        break;
-                                    }
-                                }
-                                if (aqyicqlVar == null || !aqyicqlVar.lthborb || !aqyicqlVar.vivhedu()) {
-                                    throw new IOException("Invalid V6 Download Only scatter entry: " + str);
-                                }
-                                if (!x.pwjmwpv.vntpaom(this.wdznaie, aqyicqlVar).getCanonicalFile().equals(file.getCanonicalFile())) {
-                                    throw new IOException("V6 Download Only image no longer matches scatter: " + str);
-                                }
-                                com.rynx.app.ojyssqt.btazysh(dataOutputStream, aqyicqlVar.ojyssqt, 128, "partition name");
-                                com.rynx.app.ojyssqt.btazysh(dataOutputStream, file.getCanonicalPath(), 4096, "image path");
-                                dataOutputStream.writeLong(aqyicqlVar.oqexvyb);
+                        File file = araemokVar == null ? null : araemokVar.ojyssqt;
+                        ohwxijw ohwxijwVar = araemokVar == null ? null : araemokVar.nmpwovh;
+                        if (ohwxijwVar == null || file == null) {
+                            throw new IOException("Invalid V6 Download Only selection");
+                        }
+                        Iterator it2 = this.wdznaie.nkemejx.iterator();
+                        while (true) {
+                            boolean zHasNext = it2.hasNext();
+                            str = ohwxijwVar.nmpwovh;
+                            if (!zHasNext) {
+                                aqyicqlVar = null;
+                                break;
+                            }
+                            aqyicqlVar = (aqyicql) it2.next();
+                            if (aqyicqlVar != null && aqyicqlVar.ojyssqt.equalsIgnoreCase(str)) {
+                                break;
                             }
                         }
-                        throw new IOException("Invalid V6 Download Only selection");
+                        if (aqyicqlVar == null || !aqyicqlVar.lthborb || !aqyicqlVar.vivhedu()) {
+                            throw new IOException("Invalid V6 Download Only scatter entry: " + str);
+                        }
+                        if (!x.pwjmwpv.vntpaom(this.wdznaie, aqyicqlVar).getCanonicalFile().equals(file.getCanonicalFile())) {
+                            throw new IOException("V6 Download Only image no longer matches scatter: " + str);
+                        }
+                        com.rynx.app.ojyssqt.btazysh(dataOutputStream, aqyicqlVar.ojyssqt, 128, "partition name");
+                        com.rynx.app.ojyssqt.btazysh(dataOutputStream, file.getCanonicalPath(), 4096, "image path");
+                        dataOutputStream.writeLong(aqyicqlVar.oqexvyb);
                     }
                     dataOutputStream.flush();
                     fileOutputStream.getFD().sync();
