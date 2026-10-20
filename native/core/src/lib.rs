@@ -798,14 +798,19 @@ mod fwup_journal {
     pub const MUTATION_STARTED: &str = "MUTATION_STARTED.txt";
     pub const SUCCESS: &str = "SUCCESS.txt";
     pub const SECCFG_PRESERVE: &str = "SECCFG-PRESERVE.bin";
-    #[allow(dead_code)]
     pub const RECORD_FILE_TXT: &str = "record-file.txt";
-    #[allow(dead_code)]
     pub const RECORD_FILE_BIN: &str = "record-file.bin";
 }
 
-/// Default record-file status when the engine cannot report one.
-const RECORD_FILE_STATUS_DEFAULT: &str = "NOT_RECEIVED";
+/// Record-file status reported by the engine. The V5 engine reports `N/A (XFLASH/V5)`; other
+/// engines have no observed record-file reporting, so the default is `NOT_RECEIVED`.
+fn record_file_status(engine: &str) -> &'static str {
+    if engine == "XFLASH/V5" {
+        "N/A (XFLASH/V5)"
+    } else {
+        "NOT_RECEIVED"
+    }
+}
 
 /// Refuse an engine/format pair that cannot run the transaction before any write happens.
 fn check_engine_format(engine: &str, xml: bool) -> Result<(), String> {
@@ -837,15 +842,28 @@ fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<S
     let engine = protocol_label(&mut session.dev);
 
     // Native journal: the reference writes a transaction journal into a NATIVE-ENGINE-BACKUP
-    // folder inside the backup directory. Journal writes are best-effort — a failure here does
-    // not abort the transaction.
+    // folder inside the backup directory. The reference insists the folder is new — reusing an
+    // existing one is refused. Journal file writes are best-effort — a failure here does not
+    // abort the transaction.
     let journal_dir = upgrade.backup.join(fwup_journal::FOLDER);
+    if journal_dir.exists() {
+        return Err(
+            "Firmware Upgrade native backup folder already exists: the journal requires a new folder"
+                .into(),
+        );
+    }
     let _ = fs::create_dir_all(&journal_dir);
     let preflight = format!(
         "[FWUP] Preflight: scatter={} engine={} version={} authorized={}\n",
         upgrade.scatter_path, engine, upgrade.version, upgrade.authorized
     );
     let _ = fs::write(journal_dir.join(fwup_journal::PREFLIGHT), &preflight);
+
+    // record-file.txt and record-file.bin are named journal placeholders: the reference writes
+    // them into the NATIVE-ENGINE-BACKUP folder, but their content formats are not recoverable
+    // from static analysis, so they are created empty rather than inventing a format.
+    let _ = fs::write(journal_dir.join(fwup_journal::RECORD_FILE_TXT), "");
+    let _ = fs::write(journal_dir.join(fwup_journal::RECORD_FILE_BIN), "");
 
     let seccfg = if upgrade.writes_seccfg && !upgrade.relock {
         let backup = seccfg_backup(session);
@@ -868,7 +886,6 @@ fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<S
     };
 
     let _ = fs::write(journal_dir.join(fwup_journal::MUTATION_STARTED), "");
-
     let before = partition_signature(&mut session.dev);
     {
         let (source, sink) = transaction_io(upgrade.base, upgrade.backup, upgrade.allowed);
@@ -891,7 +908,7 @@ fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<S
     // What the engine wrote to disk is retained for recovery; the in-memory seccfg copy is not.
     let retained = dir_bytes(upgrade.backup);
     let backup_bytes = retained + seccfg.map(|bytes| bytes.len() as u64).unwrap_or(0);
-    let record_status = RECORD_FILE_STATUS_DEFAULT;
+    let record_status = record_file_status(engine);
 
     Ok(format!(
         "FIRMWARE UPGRADE COMPLETE\n\

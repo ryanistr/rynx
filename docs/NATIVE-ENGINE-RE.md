@@ -278,8 +278,9 @@ Honest gaps, not oversights:
   files (`PREFLIGHT.txt`, `MUTATION_STARTED.txt`, `SUCCESS.txt`, `SECCFG-PRESERVE.bin`) are written
   best-effort; `record-file.txt` and `record-file.bin` are named as placeholders because their
   content formats are not recoverable from the shipped binary. The payload reports
-  `RECORD_FILE_STATUS: NOT_RECEIVED`, `RECORD_FILE_RAW:` and `RECORD_FILE_SUMMARY:` (empty — the
-  reference emits `N/A (XFLASH/V5)` on the V5 engine but the V6 format is unknown). Exact journal
+  `RECORD_FILE_STATUS` / `RECORD_FILE_RAW` / `RECORD_FILE_SUMMARY` lines. `RECORD_FILE_STATUS` is
+  `N/A (XFLASH/V5)` when the engine is V5 (`NOT_RECEIVED` otherwise — no other engine's record-file
+  reporting was observed); `RECORD_FILE_RAW` and `RECORD_FILE_SUMMARY` are empty. Exact journal
   file contents and the record-file wire format are gaps: they were not recoverable from static
   analysis of the reference `.so` and have not been exercised against silicon.
 

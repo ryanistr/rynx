@@ -266,8 +266,8 @@ Run 2026-10-19 on the shipped bytes of both APKs: `apkanalyzer manifest print` a
 `aapt2 dump badging` for declarations, REA `decode_android_resources` (`include_strings: true`,
 locales `default` and `in`) for the string tables, `baksmali list classes|methods|fields` for the
 code. Reference artifact: the released arm64-v8a build (release, R8-minified). Rynx side:
-`build-apk/rynx-debug.apk`, md5 `26bb3204cce3f490b135a480aa3b1632`; `librynx_core.so` md5
-`62d684d5db3f58bb46e11343ac1dca87` (device copy identical).
+`build-apk/rynx-debug.apk`, md5 `a92388e4c69d970acea922c4fa0c6366`; `librynx_core.so` md5
+`58c3726b0321dcd0a2bb88bba029bcc0` (device copy identical once installed).
 
 | surface | reference | rynx | result |
 | --- | --- | --- | --- |
