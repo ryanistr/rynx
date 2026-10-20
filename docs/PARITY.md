@@ -252,7 +252,7 @@ da, auth, preloader)` is the same shape without the verb and operands.
 
 Nothing above is verified against hardware: this machine has no MTK target on USB, so every
 USB/DA path is compile-, API- and unit-verified only (`cargo +nightly test -p rynx-core`,
-twenty-eight tests, three of them driving the engine's own `PlProtocol::get_hw_sw_ver` through the
+fifty-one tests, three of them driving the engine's own `PlProtocol::get_hw_sw_ver` through the
 port wrapper). `HW VERSION`/`SW VERSION` are no longer a gap: the wrapper watches the version reply
 as it passes (`native/core/src/port_recorder.rs`) instead of waiting for an engine change, and the
 transactional firmware upgrade is no longer reduced to a bare scatter flash: the plan codec
@@ -266,8 +266,8 @@ Run 2026-10-19 on the shipped bytes of both APKs: `apkanalyzer manifest print` a
 `aapt2 dump badging` for declarations, REA `decode_android_resources` (`include_strings: true`,
 locales `default` and `in`) for the string tables, `baksmali list classes|methods|fields` for the
 code. Reference artifact: the released arm64-v8a build (release, R8-minified). Rynx side:
-`build-apk/rynx-debug.apk`, md5 `72aecef2a7b04019cf814b8ec7998f1b`; `librynx_core.so` md5
-`4f4761f337e966b37f62b361fd330e57` (device copy identical).
+`build-apk/rynx-debug.apk`, md5 `6e364c709dbf035c45e6246da9f15617`; `librynx_core.so` md5
+`26202b10a3b7dddb48d32f0eb6b0ed24` (device copy identical).
 
 | surface | reference | rynx | result |
 | --- | --- | --- | --- |

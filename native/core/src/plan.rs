@@ -34,6 +34,12 @@ pub const DLV6_VERSION: u32 = 1;
 
 /// Flag bit set when the user ticked the partition in the review sheet.
 pub const FLAG_SELECTED: u8 = 0x01;
+/// Scatter entry's `is_reserved` attribute, carried but not acted on.
+#[allow(dead_code)]
+pub const FLAG_RESERVED: u8 = 0x02;
+/// Scatter entry's `boundary_check` attribute, carried but not acted on.
+#[allow(dead_code)]
+pub const FLAG_BOUNDARY_CHECK: u8 = 0x04;
 /// Flag bits the writer can produce; anything else did not come from the app.
 pub const FLAG_MASK: u8 = 0x0F;
 
@@ -243,6 +249,24 @@ pub fn parse_fwup(bytes: &[u8]) -> Result<FwupPlan, String> {
     if let Some(entry) = entries.iter().find(|entry| entry.selected() && entry.image.is_empty()) {
         return Err(format!("Firmware Upgrade plan has no image for '{}'", entry.name));
     }
+    let mut seen = BTreeSet::new();
+    for entry in &entries {
+        if !seen.insert(entry.name.to_ascii_lowercase()) {
+            return Err(format!(
+                "Duplicate Firmware Upgrade partition: '{}'",
+                entry.name
+            ));
+        }
+    }
+    if let Some(entry) = entries
+        .iter()
+        .find(|entry| entry.selected() && !inside_scatter(&scatter_path, &entry.image))
+    {
+        return Err(format!(
+            "Authorized image escaped the scatter folder: '{}'",
+            entry.name
+        ));
+    }
     Ok(FwupPlan {
         scatter_path,
         platform,
@@ -375,6 +399,17 @@ pub fn authorized_images<'a>(
     entries
         .map(|(name, image)| (name.to_ascii_lowercase(), image.to_string()))
         .collect()
+}
+
+/// Whether a plan path stays inside the folder that holds the scatter.
+///
+/// The reference derives every plan path relative to the scatter's own folder and refuses one that
+/// escapes it, so a plan cannot reach a file the user never picked.
+pub fn inside_scatter(scatter_path: &str, image: &str) -> bool {
+    let folder = Path::new(scatter_path)
+        .parent()
+        .unwrap_or_else(|| Path::new("/"));
+    Path::new(image).starts_with(folder)
 }
 
 /// Resolve a scatter-relative image path against the plan's authorization list.
@@ -617,5 +652,66 @@ mod tests {
             .expect("authorized");
         assert_eq!(resolved, PathBuf::from("/sdcard/images/boot.img"));
         assert!(authorize("images/vendor.img", Path::new("/sdcard"), &allowed).is_none());
+    }
+
+    #[test]
+    fn fwup_refuses_a_path_that_leaves_the_scatter_folder() {
+        let bytes = fwup(
+            &[("boot", "/elsewhere/boot.img", 1 << 20, 900_000, FLAG_SELECTED)],
+            "/sdcard/scatter.xml",
+        );
+        assert_eq!(
+            parse_fwup(&bytes).unwrap_err(),
+            "Authorized image escaped the scatter folder: 'boot'"
+        );
+        let inside = fwup(
+            &[("boot", "/sdcard/boot.img", 1 << 20, 900_000, FLAG_SELECTED)],
+            "/sdcard/scatter.xml",
+        );
+        assert!(parse_fwup(&inside).is_ok());
+    }
+
+    #[test]
+    fn fwup_refuses_a_partition_named_twice() {
+        let bytes = fwup(
+            &[
+                ("boot", "/sdcard/boot.img", 1 << 20, 900_000, FLAG_SELECTED),
+                ("Boot", "/sdcard/boot2.img", 1 << 20, 900_000, 0),
+            ],
+            "/sdcard/scatter.xml",
+        );
+        assert_eq!(
+            parse_fwup(&bytes).unwrap_err(),
+            "Duplicate Firmware Upgrade partition: 'Boot'"
+        );
+    }
+
+    #[test]
+    fn the_scatter_attributes_ride_in_the_plan_flags() {
+        let bytes = fwup(
+            &[(
+                "boot",
+                "/sdcard/boot.img",
+                1 << 20,
+                900_000,
+                FLAG_SELECTED | FLAG_RESERVED,
+            )],
+            "/sdcard/scatter.xml",
+        );
+        let plan = parse_fwup(&bytes).expect("plan parses");
+        assert_eq!(plan.entries[0].flags, FLAG_SELECTED | FLAG_RESERVED);
+
+        let bytes = fwup(
+            &[(
+                "boot",
+                "/sdcard/boot.img",
+                1 << 20,
+                900_000,
+                FLAG_SELECTED | FLAG_BOUNDARY_CHECK,
+            )],
+            "/sdcard/scatter.xml",
+        );
+        let plan = parse_fwup(&bytes).expect("plan parses");
+        assert_eq!(plan.entries[0].flags, FLAG_SELECTED | FLAG_BOUNDARY_CHECK);
     }
 }

@@ -116,8 +116,8 @@ fn boot_mode_label(connection: ConnectionType) -> &'static str {
 /// DA protocol as the app's `DA PROTOCOL:` line spells it.
 fn protocol_label(dev: &mut Device<'static, Port>) -> &'static str {
     match dev.get_protocol() {
-        Some(DaProtocol::V5(_)) => "XFlash (V5)",
-        Some(DaProtocol::V6(_)) => "XML (V6)",
+        Some(DaProtocol::V5(_)) => "XFLASH/V5",
+        Some(DaProtocol::V6(_)) => "XML/V6",
         None => "",
     }
 }
@@ -658,6 +658,12 @@ fn pinned_images(entries: &[plan::FwupEntry]) -> Result<(), String> {
                 entry.name
             )
         })?;
+        if meta.len() == 0 {
+            return Err(format!(
+                "Firmware Upgrade image is empty for '{}'",
+                entry.name
+            ));
+        }
         if meta.len() != entry.image_size
             || mtime_ms(Path::new(&entry.image)) != Some(entry.image_timestamp)
         {
@@ -787,8 +793,8 @@ fn first_line(text: &str) -> &str {
 /// Refuse an engine/format pair that cannot run the transaction before any write happens.
 fn check_engine_format(engine: &str, xml: bool) -> Result<(), String> {
     match (engine, xml) {
-        ("XFlash/V5", true) => {
-            Err("XFlash/V5 DA cannot run an XML/V6 Firmware Upgrade".into())
+        ("XFLASH/V5", true) => {
+            Err("XFLASH/V5 DA cannot run an XML/V6 Firmware Upgrade".into())
         }
         ("XML/V6", false) => Err("XML/V6 DA requires an XML scatter for Firmware Upgrade".into()),
         _ => Ok(()),
@@ -1543,7 +1549,8 @@ mod tests {
         let mut out = Vec::new();
         out.extend_from_slice(plan::FWUP_MAGIC);
         out.extend_from_slice(&plan::FWUP_VERSION.to_be_bytes());
-        put(&mut out, "/sdcard/scatter.xml");
+        let folder = Path::new(image).parent().unwrap_or_else(|| Path::new("/"));
+        put(&mut out, &folder.join("scatter.xml").to_string_lossy());
         put(&mut out, "MT6893");
         put(&mut out, "UFS");
         out.extend_from_slice(&4096u64.to_be_bytes());
@@ -1584,6 +1591,35 @@ mod tests {
         assert_eq!(
             pinned_images(&restamped.entries).unwrap_err(),
             "Firmware Upgrade image changed after review: boot"
+        );
+    }
+
+    #[test]
+    fn a_format_the_engine_cannot_run_is_refused_before_any_write() {
+        assert_eq!(
+            check_engine_format("XFLASH/V5", true).unwrap_err(),
+            "XFLASH/V5 DA cannot run an XML/V6 Firmware Upgrade"
+        );
+        assert_eq!(
+            check_engine_format("XML/V6", false).unwrap_err(),
+            "XML/V6 DA requires an XML scatter for Firmware Upgrade"
+        );
+        assert!(check_engine_format("XML/V6", true).is_ok());
+        assert!(check_engine_format("XFLASH/V5", false).is_ok());
+    }
+
+    #[test]
+    fn an_empty_payload_is_refused_before_the_transaction_starts() {
+        let dir = scratch("empty-image");
+        let image = dir.join("boot.img");
+        fs::File::create(&image).expect("create empty image");
+        let name = image.to_str().unwrap();
+
+        let reviewed = plan::parse_fwup(&fwup_bytes(name, 0, mtime_ms(&image).unwrap()))
+            .expect("plan parses");
+        assert_eq!(
+            pinned_images(&reviewed.entries).unwrap_err(),
+            "Firmware Upgrade image is empty for 'boot'"
         );
     }
 

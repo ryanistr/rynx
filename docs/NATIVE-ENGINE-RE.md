@@ -217,9 +217,22 @@ the app half and reproduced in `native/core/src/plan.rs`:
 | Download Only v6 | `RYNXDLV61` | `version:u32`, `scatter:str`, `platform:str`, `storage:str`, `count:u32` | `name`, `image` (str), `size:u64` |
 
 Every integer is big-endian, and a string is a `u32` length followed by that many UTF-8 bytes,
-refused when the length exceeds the field's limit. `flags` bit `0x08` is the Auto Relock tick the
-app sets on the seccfg row. The operand's kind is decided by the magic, so a console invocation that
-passes a plain scatter still works.
+refused when the length exceeds the field's limit. The operand's kind is decided by the magic, so a
+console invocation that passes a plain scatter still works.
+
+`flags` carries four bits, all of them written by the review sheet in `x/kggugdp.java:4804`:
+
+| Bit | Meaning | Source in the app |
+|---|---|---|
+| `0x01` | the partition was ticked | `atntgcp(entry)` |
+| `0x02` | the scatter entry says `is_reserved` | `pvbzgon && buswjhz` (`x/ezuzoct.java:60`) |
+| `0x04` | the scatter entry says `boundary_check` | `utmeivs && ekyqleu` (`x/ezuzoct.java:60`) |
+| `0x08` | Auto Relock on the seccfg row | `lsgjyur && name == "seccfg"` |
+
+A plan is refused before any device work when it names a partition twice, when a selected entry has
+no image or an empty one, when its flags carry a bit the writer cannot produce, or when a selected
+image resolves outside the scatter's own folder — the reference derives every plan path relative to
+the scatter and refuses one that escapes it, so a plan cannot reach a file the user never picked.
 
 ## What this core does not reproduce
 
@@ -259,9 +272,14 @@ Honest gaps, not oversights:
   `NATIVE_BACKUP_RETAINED_BYTES` are measured from that tree, not copied. seccfg is preserved by
   reading the block before the flash and writing it back afterwards unless Auto Relock is set, in
   which case it is reformatted. What is **not** reproduced: the reference's protected-data *record*
-  files (`RECORD_FILE_STATUS` is absent from the payload), its postflight partition re-audit beyond
+  machinery — it writes a journal of the transaction (`PREFLIGHT.txt`, `MUTATION_STARTED.txt`,
+  `SUCCESS.txt`, `SECCFG-PRESERVE.bin`, `record-file.txt`, `record-file.bin`) into a
+  `NATIVE-ENGINE-BACKUP` folder it insists is new and holds inside its sandbox, reports it back as
+  `RECORD_FILE_STATUS`/`RECORD_FILE_RAW`/`RECORD_FILE_SUMMARY` (`N/A (XFLASH/V5)` on the V5 engine),
+  and those lines are absent from this core's payload. Its postflight partition re-audit beyond
   the count and signature this core can measure, and its own layout-migration handling — here
-  `LAYOUT_CHANGED` is a comparison of the partition signature before and after. Fields for machinery
+  `LAYOUT_CHANGED` is a comparison of the partition signature before and after — are likewise
+  out of scope. Fields for machinery
   that does not exist are emitted at their true values (`NONE`, `0`, `NO`), never copied from the
   reference.
 * **Dispatch ids, none of this.** `nativeRunCommand`/`nativeRunGuiAction` take an integer
