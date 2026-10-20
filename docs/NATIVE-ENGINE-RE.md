@@ -271,17 +271,22 @@ Honest gaps, not oversights:
   same source when a partition has to be restored; `NATIVE_BACKUP_BYTES` and
   `NATIVE_BACKUP_RETAINED_BYTES` are measured from that tree, not copied. seccfg is preserved by
   reading the block before the flash and writing it back afterwards unless Auto Relock is set, in
-  which case it is reformatted. What is **not** reproduced: the reference's protected-data *record*
-  machinery — it writes a journal of the transaction (`PREFLIGHT.txt`, `MUTATION_STARTED.txt`,
-  `SUCCESS.txt`, `SECCFG-PRESERVE.bin`, `record-file.txt`, `record-file.bin`) into a
-  `NATIVE-ENGINE-BACKUP` folder it insists is new and holds inside its sandbox, reports it back as
-  `RECORD_FILE_STATUS`/`RECORD_FILE_RAW`/`RECORD_FILE_SUMMARY` (`N/A (XFLASH/V5)` on the V5 engine),
-  and those lines are absent from this core's payload. Its postflight partition re-audit beyond
-  the count and signature this core can measure, and its own layout-migration handling — here
-  `LAYOUT_CHANGED` is a comparison of the partition signature before and after — are likewise
-  out of scope. Fields for machinery
-  that does not exist are emitted at their true values (`NONE`, `0`, `NO`), never copied from the
-  reference.
+  which case it is reformatted.
+
+  The reference's protected-data *record* machinery is reproduced as far as its strings allow:
+  a `NATIVE-ENGINE-BACKUP` folder is created inside the backup directory and the transaction journal
+  files (`PREFLIGHT.txt`, `MUTATION_STARTED.txt`, `SUCCESS.txt`, `SECCFG-PRESERVE.bin`) are written
+  best-effort; `record-file.txt` and `record-file.bin` are named as placeholders because their
+  content formats are not recoverable from the shipped binary. The payload reports
+  `RECORD_FILE_STATUS: NOT_RECEIVED`, `RECORD_FILE_RAW:` and `RECORD_FILE_SUMMARY:` (empty — the
+  reference emits `N/A (XFLASH/V5)` on the V5 engine but the V6 format is unknown). Exact journal
+  file contents and the record-file wire format are gaps: they were not recoverable from static
+  analysis of the reference `.so` and have not been exercised against silicon.
+
+  Its postflight partition re-audit beyond the count and signature this core can measure, and its own
+  layout-migration handling — here `LAYOUT_CHANGED` is a comparison of the partition signature before
+  and after — are likewise out of scope. Fields for machinery that does not exist are emitted at their
+  true values (`NONE`, `0`, `NO`), never copied from the reference.
 * **Dispatch ids, none of this.** `nativeRunCommand`/`nativeRunGuiAction` take an integer
   `commandId` that the app passes through untouched; the engine ignores it, as this core does.
 

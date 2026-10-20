@@ -790,6 +790,23 @@ fn first_line(text: &str) -> &str {
     text.lines().next().unwrap_or("").trim()
 }
 
+/// Journal file names the reference writes into its NATIVE-ENGINE-BACKUP folder.
+/// The folder must be new; the reference refuses to reuse an existing one.
+mod fwup_journal {
+    pub const FOLDER: &str = "NATIVE-ENGINE-BACKUP";
+    pub const PREFLIGHT: &str = "PREFLIGHT.txt";
+    pub const MUTATION_STARTED: &str = "MUTATION_STARTED.txt";
+    pub const SUCCESS: &str = "SUCCESS.txt";
+    pub const SECCFG_PRESERVE: &str = "SECCFG-PRESERVE.bin";
+    #[allow(dead_code)]
+    pub const RECORD_FILE_TXT: &str = "record-file.txt";
+    #[allow(dead_code)]
+    pub const RECORD_FILE_BIN: &str = "record-file.bin";
+}
+
+/// Default record-file status when the engine cannot report one.
+const RECORD_FILE_STATUS_DEFAULT: &str = "NOT_RECEIVED";
+
 /// Refuse an engine/format pair that cannot run the transaction before any write happens.
 fn check_engine_format(engine: &str, xml: bool) -> Result<(), String> {
     match (engine, xml) {
@@ -818,6 +835,18 @@ struct Upgrade<'a> {
 
 fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<String, String> {
     let engine = protocol_label(&mut session.dev);
+
+    // Native journal: the reference writes a transaction journal into a NATIVE-ENGINE-BACKUP
+    // folder inside the backup directory. Journal writes are best-effort — a failure here does
+    // not abort the transaction.
+    let journal_dir = upgrade.backup.join(fwup_journal::FOLDER);
+    let _ = fs::create_dir_all(&journal_dir);
+    let preflight = format!(
+        "[FWUP] Preflight: scatter={} engine={} version={} authorized={}\n",
+        upgrade.scatter_path, engine, upgrade.version, upgrade.authorized
+    );
+    let _ = fs::write(journal_dir.join(fwup_journal::PREFLIGHT), &preflight);
+
     let seccfg = if upgrade.writes_seccfg && !upgrade.relock {
         let backup = seccfg_backup(session);
         if backup.is_none() {
@@ -826,10 +855,19 @@ fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<S
                     .into(),
             );
         }
+        // Preserve seccfg for recovery before the transaction mutates anything.
+        if let Some(bytes) = &backup {
+            let _ = fs::write(
+                journal_dir.join(fwup_journal::SECCFG_PRESERVE),
+                bytes,
+            );
+        }
         backup
     } else {
         None
     };
+
+    let _ = fs::write(journal_dir.join(fwup_journal::MUTATION_STARTED), "");
 
     let before = partition_signature(&mut session.dev);
     {
@@ -842,6 +880,8 @@ fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<S
     let after = partition_signature(&mut session.dev);
     let layout_changed = if before == after { "NO" } else { "YES" };
 
+    let _ = fs::write(journal_dir.join(fwup_journal::SUCCESS), "");
+
     let policy = if upgrade.writes_seccfg {
         apply_seccfg_policy(session, seccfg.clone(), upgrade.relock)
     } else {
@@ -851,29 +891,41 @@ fn run_firmware_upgrade(session: &mut Session, upgrade: Upgrade<'_>) -> Result<S
     // What the engine wrote to disk is retained for recovery; the in-memory seccfg copy is not.
     let retained = dir_bytes(upgrade.backup);
     let backup_bytes = retained + seccfg.map(|bytes| bytes.len() as u64).unwrap_or(0);
+    let record_status = RECORD_FILE_STATUS_DEFAULT;
 
     Ok(format!(
         "FIRMWARE UPGRADE COMPLETE\n\
-         ENGINE: {engine}\n\
+         ENGINE: {}\n\
          FLASH_UPDATE_VERSION: {}\n\
          \n\
          SCATTER: {}\n\
          CHECKSUM_LEVEL: NONE\n\
          HOST_CALLBACK_CONTRACT: NONE\n\
          HOST_FILESYSTEM_OPS: NATIVE\n\
-         LAYOUT_CHANGED: {layout_changed}\n\
+         LAYOUT_CHANGED: {}\n\
          POSTFLIGHT_PARTITIONS: {}\n\
          AUTO_RELOCK: {}\n\
-         SECCFG_POLICY: {policy}\n\
+         SECCFG_POLICY: {}\n\
          AUTHORIZED_IMAGES: {}\n\
-         NATIVE_BACKUP_BYTES: {backup_bytes}\n\
-         NATIVE_BACKUP_RETAINED_BYTES: {retained}\n\
+         RECORD_FILE_STATUS: {}\n\
+         RECORD_FILE_RAW: {}\n\
+         RECORD_FILE_SUMMARY: {}\n\
+         NATIVE_BACKUP_BYTES: {}\n\
+         NATIVE_BACKUP_RETAINED_BYTES: {}\n\
          BOOT_SLOT_POLICY: UNCHANGED",
+        engine,
         upgrade.version,
         upgrade.scatter_path,
+        layout_changed,
         after.len(),
         if upgrade.relock { "ON" } else { "OFF" },
-        upgrade.authorized
+        policy,
+        upgrade.authorized,
+        record_status,
+        "",
+        "",
+        backup_bytes,
+        retained
     ))
 }
 
